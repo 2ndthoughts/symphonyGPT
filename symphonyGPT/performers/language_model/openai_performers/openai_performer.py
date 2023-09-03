@@ -1,15 +1,14 @@
 import openai
+
+from performers.api_keys import APIKeys
 from symphonyGPT.performers.language_model.language_model_performer import LanguageModelPerformer
 
 
 class OpenAIPerformer(LanguageModelPerformer):
-
-    openai.api_key = "<enter your openai api key here>" # do not check in your api key !!
+    openai.api_key = APIKeys().get_api_key("openai")
 
     def __init__(self):
         super().__init__()
-        if openai.api_key == "<enter your openai api key here>":
-            raise Exception("You must enter your openai api key in ../performers/openai/openai_performer.py")
         self.response_raw_text = None
 
     def who_am_i(self):

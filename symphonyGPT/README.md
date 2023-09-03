@@ -53,12 +53,12 @@ we will be calling.</p>
 #### OpenAI API key
 <p>After getting an OpenAI account from https://platform.openai.com, login and navigate this page 
 https://platform.openai.com/account/api-keys, copy the API key and update the api_key in the file 
-symphonyGPT/performers/language_model/openai_performers/openai_performer.py</p>
+symphonyGPT/performers/api_keys.py</p>
 
 #### CourtListener API key
 <p>After getting an account from https://www.courtlistener.com/sign-in/, login and navigate to this page
 https://www.courtlistener.com/help/api/rest/#permissions to copy your authorization token and update the api_key in
-the file symphonyGPT/performers/api_extractor/secondthoughts/court_listener_extractor.py</p>
+the file symphonyGPT/performers/api_keys.py</p>
 
 <p>Here is a list of the examples from the ../tests folder, a short description of what they do and the requirements to 
 run them:</p>

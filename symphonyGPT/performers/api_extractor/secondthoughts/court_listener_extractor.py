@@ -1,5 +1,7 @@
 import json
 import requests
+
+from performers.api_keys import APIKeys
 from symphonyGPT.performers.api_extractor.api_extractor import APIExtractor
 from symphonyGPT.symphony.classifier.huggingface.keyphrase_extraction_token_classifier import \
     KeyphraseExtractionTokenClassifier
@@ -16,10 +18,7 @@ class CourtListenerExtractor(APIExtractor):
         super().__init__()
         self.max_rnk = max_rnk
         self.fields = fields
-        self.api_token = "<enter your courtlistener api token here>"  # do not check in your api token !!
-        if self.api_token == "<enter your courtlistener api token here>":
-            raise Exception("You must enter your courtlistener api token in "
-                            "../performers/api_extractor/secondthoughts/court_listener_extractor.py")
+        self.api_token = APIKeys().get_api_key("courtlistener")
 
     def perform(self, prompt):
         classifications = prompt.get_classifications()
