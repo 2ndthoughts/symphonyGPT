@@ -1,5 +1,5 @@
 from performers.api_extractor.secondthoughts.court_listener_extractor import CourtListenerExtractor
-from symphonyGPT.performers.language_model.openai.gpt_4 import Gpt4
+from symphonyGPT.performers.language_model.openai_performers.gpt_4 import Gpt4
 from symphonyGPT.performers.api_extractor.secondthoughts.nlm_extractor import NLMExtractor
 from symphonyGPT.symphony.classifier.huggingface.biomedical_ner_all_token_classifier import \
     BiomedicalNerAllTokenClassifier

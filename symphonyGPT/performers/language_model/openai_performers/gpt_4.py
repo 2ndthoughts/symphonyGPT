@@ -1,4 +1,4 @@
-from symphonyGPT.performers.language_model.openai.chat_completion_performer import ChatCompletionPerformer
+from symphonyGPT.performers.language_model.openai_performers.chat_completion_performer import ChatCompletionPerformer
 
 
 class Gpt4(ChatCompletionPerformer):

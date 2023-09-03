@@ -1,4 +1,4 @@
-from symphonyGPT.performers.language_model.openai.completion_performer import CompletionPerformer
+from symphonyGPT.performers.language_model.openai_performers.completion_performer import CompletionPerformer
 
 
 class TextBabbage001(CompletionPerformer):

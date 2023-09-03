@@ -1,5 +1,5 @@
 from performers.api_extractor.secondthoughts.clinical_trials_gov_extractor import CTGExtractor
-from symphonyGPT.performers.language_model.openai.gpt_4 import Gpt4
+from symphonyGPT.performers.language_model.openai_performers.gpt_4 import Gpt4
 from symphonyGPT.symphony.classifier.huggingface.ade_drug_effect_token_classifier import \
     AdeDrugEffectTokenClassifier
 from symphonyGPT.symphony.movement import Movement

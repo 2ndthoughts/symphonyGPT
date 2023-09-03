@@ -1,5 +1,5 @@
 from performers.api_extractor.secondthoughts.court_listener_extractor import CourtListenerExtractor
-from symphonyGPT.performers.language_model.openai.gpt_4 import Gpt4
+from symphonyGPT.performers.language_model.openai_performers.gpt_4 import Gpt4
 from symphonyGPT.symphony.classifier.huggingface.keyphrase_extraction_token_classifier import \
     KeyphraseExtractionTokenClassifier
 from symphonyGPT.symphony.movement import Movement

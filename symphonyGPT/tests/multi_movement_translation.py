@@ -1,4 +1,4 @@
-from symphonyGPT.performers.language_model.openai.gpt_4 import Gpt4
+from symphonyGPT.performers.language_model.openai_performers.gpt_4 import Gpt4
 from symphonyGPT.symphony.movement import Movement
 from symphonyGPT.symphony.outcome_strategy.outcome_strategy import OutcomeStrategy
 from symphonyGPT.symphony.symphony import Symphony

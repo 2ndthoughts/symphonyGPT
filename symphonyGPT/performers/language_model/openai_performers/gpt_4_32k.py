@@ -1,4 +1,4 @@
-from symphonyGPT.performers.language_model.openai.chat_completion_performer import ChatCompletionPerformer
+from symphonyGPT.performers.language_model.openai_performers.chat_completion_performer import ChatCompletionPerformer
 
 # you must have the license to access this model
 class Gpt4_32k(ChatCompletionPerformer):

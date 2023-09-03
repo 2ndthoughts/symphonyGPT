@@ -1,5 +1,5 @@
 import openai
-from symphonyGPT.performers.language_model.openai.openai_performer import OpenAIPerformer
+from symphonyGPT.performers.language_model.openai_performers.openai_performer import OpenAIPerformer
 
 
 class ChatCompletionPerformer(OpenAIPerformer):

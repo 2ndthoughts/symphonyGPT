@@ -1,4 +1,4 @@
-from symphonyGPT.performers.language_model.openai.gpt_4 import Gpt4
+from symphonyGPT.performers.language_model.openai_performers.gpt_4 import Gpt4
 from symphonyGPT.performers.performer import Performer
 from symphonyGPT.symphony.prompt import Prompt
 

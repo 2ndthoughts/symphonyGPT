@@ -1,10 +1,10 @@
-from symphonyGPT.performers.language_model.openai.gpt_35_turbo_0301 import Gpt35Turbo0301
-from symphonyGPT.performers.language_model.openai.gpt_4 import Gpt4
-from symphonyGPT.performers.language_model.openai.text_ada_001 import TextAda001
-from symphonyGPT.performers.language_model.openai.text_babbage_001 import TextBabbage001
-from symphonyGPT.performers.language_model.openai.text_curie_001 import TextCurie001
-from symphonyGPT.performers.language_model.openai.text_davinci_002 import TextDavinci002
-from symphonyGPT.performers.language_model.openai.text_davinci_003 import TextDavinci003
+from symphonyGPT.performers.language_model.openai_performers.gpt_35_turbo_0301 import Gpt35Turbo0301
+from symphonyGPT.performers.language_model.openai_performers.gpt_4 import Gpt4
+from symphonyGPT.performers.language_model.openai_performers.text_ada_001 import TextAda001
+from symphonyGPT.performers.language_model.openai_performers.text_babbage_001 import TextBabbage001
+from symphonyGPT.performers.language_model.openai_performers.text_curie_001 import TextCurie001
+from symphonyGPT.performers.language_model.openai_performers.text_davinci_002 import TextDavinci002
+from symphonyGPT.performers.language_model.openai_performers.text_davinci_003 import TextDavinci003
 from symphonyGPT.symphony.movement import Movement
 from symphonyGPT.symphony.symphony import Symphony
 

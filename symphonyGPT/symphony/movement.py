@@ -1,6 +1,6 @@
 import json
 import concurrent.futures
-from symphonyGPT.performers.language_model.openai.gpt_35_turbo_0301 import Gpt35Turbo0301
+from symphonyGPT.performers.language_model.openai_performers.gpt_35_turbo_0301 import Gpt35Turbo0301
 from symphonyGPT.symphony.prompt import Prompt
 from symphonyGPT.symphony.util import Util
 
