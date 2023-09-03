@@ -3,8 +3,8 @@ from symphonyGPT.performers.language_model.language_model_performer import Langu
 
 
 class OpenAIPerformer(LanguageModelPerformer):
-    openai.api_key = "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"
-    # openai.api_key = "<enter your openai api key here>" # do not check in your api key !!
+
+    openai.api_key = "<enter your openai api key here>" # do not check in your api key !!
 
     def __init__(self):
         super().__init__()

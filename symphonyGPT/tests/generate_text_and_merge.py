@@ -12,9 +12,6 @@ from symphonyGPT.symphony.symphony import Symphony
 # in this example, make sure to get an openai api key according to this page
 # https://platform.openai.com/account/api-keys and update the api_key in the file
 # symphonyGPT/performers/language_model/openai/openai_performer.py
-#
-# also make sure to get a huggingface api key according to this page https://huggingface.co/settings/tokens
-# and update the api_key in the file symphonyGPT/symphony/classifier/huggingface/huggingface_performer.py
 
 
 def main() -> None:

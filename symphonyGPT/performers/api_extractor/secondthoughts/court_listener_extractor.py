@@ -16,9 +16,7 @@ class CourtListenerExtractor(APIExtractor):
         super().__init__()
         self.max_rnk = max_rnk
         self.fields = fields
-        # Your API token from CourtListener
-        self.api_token = '357291dc2928178a4ca37933a71c00a0327a2d0a'
-        # self.api_token = "<enter your courtlistener api token here>"  # do not check in your api token !!
+        self.api_token = "<enter your courtlistener api token here>"  # do not check in your api token !!
         if self.api_token == "<enter your courtlistener api token here>":
             raise Exception("You must enter your courtlistener api token in "
                             "../performers/api_extractor/secondthoughts/court_listener_extractor.py")

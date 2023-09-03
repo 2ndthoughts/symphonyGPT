@@ -5,24 +5,22 @@ from symphonyGPT.symphony.classifier.huggingface.ade_drug_effect_token_classifie
 from symphonyGPT.symphony.movement import Movement
 from symphonyGPT.symphony.symphony import Symphony
 
+
 # in this example, make sure to get an openai api key according to this page
 # https://platform.openai.com/account/api-keys and update the api_key in the file
 # symphonyGPT/performers/language_model/openai/openai_performer.py
-#
-# also make sure to get a huggingface api key according to this page https://huggingface.co/settings/tokens
-# and update the api_key in the file symphonyGPT/symphony/classifier/huggingface/huggingface_performer.py
 
 def main() -> None:
-    #prompt = "does metformin increase lifespan"
-    #prompt = "What is the average starting dose of Rapamycin used in clinic trials focusing on alzheimer's disease"
-    #prompt = "What is the average dose of Magnesium used in clinic trials focusing on hypertension"
-    #prompt = "what is the best drug to reduce hypertension for people with diabetes"
-    #prompt = "has the average cohort size in clinical trials targeting longevity with Metformin increased or decreased over the past 10 years"
-    #prompt = "does Rapamycin reduce Alzheimer's disease"
-    #prompt = "does collagen increase muscle mass"
+    # prompt = "does metformin increase lifespan"
+    # prompt = "What is the average starting dose of Rapamycin used in clinic trials focusing on alzheimer's disease"
+    # prompt = "What is the average dose of Magnesium used in clinic trials focusing on hypertension"
+    # prompt = "what is the best drug to reduce hypertension for people with diabetes"
+    # prompt = "has the average cohort size in clinical trials targeting longevity with Metformin increased or decreased over the past 10 years"
+    # prompt = "does Rapamycin reduce Alzheimer's disease"
+    # prompt = "does collagen increase muscle mass"
     prompt = "does Ivermectin reduce covid-19 symptoms"
-    #prompt = "does magnesium reduce high blood pressure"
-    #prompt = "Has the average cohort size in clinical trials targeting Parkinson's increased or decreased over the past 10 years?"
+    # prompt = "does magnesium reduce high blood pressure"
+    # prompt = "Has the average cohort size in clinical trials targeting Parkinson's increased or decreased over the past 10 years?"
 
     # The symphony is composed of two movements
     #  * The first movement is to extract the drug and effect from the prompt then list all
@@ -30,9 +28,10 @@ def main() -> None:
     #
     #  * The second movement is to generate a conclusion based on the extracted drug and effect
     #  * and the list of studies from clinicaltrials.gov
-    
+
     m_extract = Movement(
-        prompt_classifier=[AdeDrugEffectTokenClassifier()], # use classifier to extract drug and effect as api search terms
+        prompt_classifier=[AdeDrugEffectTokenClassifier()],
+        # use classifier to extract drug and effect as api search terms
         performers=[CTGExtractor(max_trials_returned=10)]
     )
 

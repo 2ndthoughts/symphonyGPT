@@ -55,11 +55,6 @@ we will be calling.</p>
 https://platform.openai.com/account/api-keys, copy the API key and update the api_key in the file 
 symphonyGPT/performers/language_model/openai/openai_performer.py</p>
 
-#### HuggingFace API key
-<p>After getting a HuggingFace account from https://huggingface.co/login, login and navigate to this page 
-https://huggingface.co/settings/tokens, copy the access key and update the api_key in the file
-symphonyGPT/symphony/classifier/huggingface/huggingface_performer.py</p>
-
 #### CourtListener API key
 <p>After getting an account from https://www.courtlistener.com/sign-in/, login and navigate to this page
 https://www.courtlistener.com/help/api/rest/#permissions to copy your authorization token and update the api_key in
@@ -69,34 +64,34 @@ the file symphonyGPT/performers/api_extractor/secondthoughts/court_listener_extr
 run them:</p>
 
 1. <b>answers_with_positive_sentiments.py</b>
-    - <b>Requirements:</b> OpenAI API key, HuggingFace API key
+    - <b>Requirements:</b> OpenAI API key
     - <b>Test:</b> Asks multiple GPT models to answer a question and then uses a HuggingFace model to classify the answer, next select the answers with positive sentiment
 2. <b>ask_arxiv.py</b>
-    - <b>Requirements:</b> OpenAI API key, HuggingFace API key
+    - <b>Requirements:</b> OpenAI API key
     - <b>Test:</b> Asks the ArXiv API to find articles for a given technical finding and then asks GPT to summarize the answers
 2. <b>ask_clinical_trials_gov.py</b>
-    - <b>Requirements:</b> OpenAI API key, HuggingFace API key
+    - <b>Requirements:</b> OpenAI API key
     - <b>Test:</b> Asks the ClinicalTrials.gov API to find clinical trials for a given disease and then asks GPT to summarize the answers
 3. <b>ask_courtlistener.py</b>
-    - <b>Requirements:</b> CourtListener API key, OpenAI API key, HuggingFace API key
+    - <b>Requirements:</b> CourtListener API key, OpenAI API key
     - <b>Test:</b> Asks the CourtListener API to find court cases relating to a given allegation and then asks GPT to summarize the answers
 4. <b>ask_nlm</b>
-    - <b>Requirements:</b> OpenAI API key, HuggingFace API key
+    - <b>Requirements:</b> OpenAI API key
     - <b>Test:</b> Asks the National Library of Medicine API to find articles for a given disease and then asks GPT to summarize the answers
 5. <b>ask_nlm_ctg_courtlistener.py</b>
-    - <b>Requirements:</b> CourtListener API key, OpenAI API key, HuggingFace API key
+    - <b>Requirements:</b> CourtListener API key, OpenAI API key
     - <b>Test:</b> Asks the National Library of Medicine, ClinicalTrials.gov and CourtListener APIs to find articles, clinical trials and court cases for a given situation and then asks GPT to summarize the answers
 6. <b>generate_text_and_merge.py</b>
-    - <b>Requirements:</b> OpenAI API key, HuggingFace API key
+    - <b>Requirements:</b> OpenAI API key
     - <b>Test:</b> Asks GPT to generate text and then merge the results into a single answer
 7. <b>multi_movement_translation.py</b>
-    - <b>Requirements:</b> OpenAI API key, HuggingFace API key
+    - <b>Requirements:</b> OpenAI API key
     - <b>Test:</b> Asks GPT to translate a sentence into multiple languages and back
 8. <b>question_answer_with_context.py</b>
-    - <b>Requirements:</b> OpenAI API key, HuggingFace API key
+    - <b>Requirements:</b> OpenAI API key
     - <b>Test:</b> Asks GPT to answer a question with context
 9. <b>shortest_math_answer_translated.py</b>
-    - <b>Requirements:</b> OpenAI API key, HuggingFace API key
+    - <b>Requirements:</b> OpenAI API key
     - <b>Test:</b> Asks GPT to answer a math question, select the shortest answer and then translate the answer
 
 ### Configuring a Symphony
