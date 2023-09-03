@@ -53,7 +53,7 @@ we will be calling.</p>
 #### OpenAI API key
 <p>After getting an OpenAI account from https://platform.openai.com, login and navigate this page 
 https://platform.openai.com/account/api-keys, copy the API key and update the api_key in the file 
-symphonyGPT/performers/language_model/openai/openai_performer.py</p>
+symphonyGPT/performers/language_model/openai_performers/openai_performer.py</p>
 
 #### CourtListener API key
 <p>After getting an account from https://www.courtlistener.com/sign-in/, login and navigate to this page
