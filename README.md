@@ -8,3 +8,6 @@ as well as integrated into UX/UI as part of a larger intelligent solution.</p>
 
 <p>The directory named 'symphonyGPT' is the source root, mark this appropriately for your IDE or python interpreter.  
 Additionaly, use the 'requirements.txt' file to update the python packages required for building and running symphonyGPT.</p>
+
+<p>There is another README.md inside the source root folder symphonyGPT/README.md that describes the code in more detail 
+and how to run the tests to experience SymphonyGPT</p>
