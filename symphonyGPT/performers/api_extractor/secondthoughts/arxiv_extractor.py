@@ -55,11 +55,19 @@ class ArxivExtractor(APIExtractor):
                     published = xml.find('ns:entry', namespaces=ns).find('ns:published', namespaces=ns).text
                     title = xml.find('ns:entry', namespaces=ns).find('ns:title', namespaces=ns).text
                     summary = xml.find('ns:entry', namespaces=ns).find('ns:summary', namespaces=ns).text
+                    authors = xml.find('ns:entry', namespaces=ns).findall('ns:author/ns:name', namespaces=ns)
+                    author_names = ""
+                    for author in authors:
+                        author_names += author.text + ", "
+
+                    if len(authors) > 0:
+                        author_names = author_names[:-2]
 
                     sub_answer["id"] = id
                     sub_answer["published"] = published
                     sub_answer["title"] = title
                     sub_answer["summary"] = summary
+                    sub_answer["authors"] = author_names
 
                     answer.append(sub_answer)
                 except ValueError:
