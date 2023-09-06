@@ -59,13 +59,13 @@ class NLMExtractor(APIExtractor):
         # https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=37421961&retmode=text&rettype=abstract
 
         kount = 0
-        answer = json.loads("{}")
+        answer = []
         for id in ids:
             kount = kount + 1
             if kount > self.max_rnk:
                 break
 
-            url = f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id={id}&retmode=text&rettype=abstract"
+            url = f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id={id}&retmode=xml&rettype=abstract"
             self.util.debug_print(f"NLMExtractor.perform() get detail url: {url}")
             self.util.debug_print_line()
 
@@ -76,10 +76,58 @@ class NLMExtractor(APIExtractor):
                 print(f"Error occurred: {e}")
             else:
                 try:
+                    xml = ElementTree.fromstring(response.text)
+                except ValueError:  # includes xml.etree.ElementTree.ParseError
+                    self.util.error_print('Decoding XML has failed')
+
+                try:
                     text = response.content
-                    summarized_text = self.summarize_result(text.decode("utf-8"), prompt.get_prompt())
-                    # optional to add code to summarize answer to fit in LLM context
-                    answer[f"PMID {id}"] = summarized_text
+
+                    pmid = xml.find('PubmedArticle/MedlineCitation/PMID').text
+                    issn = xml.find('PubmedArticle/MedlineCitation/Article/Journal/ISSN').text
+                    article_title = xml.find('PubmedArticle/MedlineCitation/Article/ArticleTitle').text
+                    abstract_text = xml.find('PubmedArticle/MedlineCitation/Article/Abstract/AbstractText').text
+                    summarized_text = self.summarize_result(abstract_text, prompt.get_prompt())
+
+                    authors = ""
+                    for author in xml.findall('PubmedArticle/MedlineCitation/Article/AuthorList/Author'):
+                        last_name = author.find('LastName').text
+
+                        first_name = ""
+                        if author.find('ForeName') is not None:
+                            first_name = author.find('ForeName').text
+
+                        authors += authors + f"{last_name}, {first_name}; "
+
+                    if authors != "":
+                        authors = authors[:-2]
+
+                    article_date = ""
+                    for date in xml.findall('PubmedArticle/MedlineCitation/Article/Journal/JournalIssue/PubDate'):
+                        if date.find('Year') is None:
+                            continue
+                        year = date.find('Year').text
+
+                        month = ""
+                        if date.find('Month') is not None:
+                            month = date.find('Month').text
+
+                        day = ""
+                        if date.find('Day') is not None:
+                            day = date.find('Day').text
+
+                        article_date += article_date + f"{year}-{month}-{day}"
+
+                    sub_answer = json.loads("{}")
+                    sub_answer["PMID"] = pmid
+                    sub_answer["ISSN"] = issn
+                    sub_answer["ArticleDate"] = article_date
+                    sub_answer["ArticleTitle"] = article_title
+                    sub_answer["AbstractText"] = summarized_text
+                    sub_answer["Authors"] = authors
+                    sub_answer["Link"] = f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
+
+                    answer.append(sub_answer)
                 except ValueError:
                     print('Decoding output has failed')
 
