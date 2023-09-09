@@ -6,7 +6,11 @@ Contact: <a href=mailto:dev@2ndthoughts.ai>dev@2ndthoughts.ai</a>
 deploy workflows that include machine learning models as a component. The workflow can be invoked on command line or web service,
 as well as integrated into UX/UI as part of a larger intelligent solution.</p>
 
-<p>The directory named 'symphonyGPT' is the source root, mark this appropriately for your IDE or python interpreter.  
+<p>The directory named 'symphonyGPT/symphonyGPT' is the source root, mark this appropriately for your IDE or python interpreter. For
+example, to execute the tests on command line, you would first add this path to your PYTHONPATH environment variable:
+
+  export PYTHONPATH=$PYTHONPATH:/Volumes/Python/Projects/symphonyGPT/symphonyGPT
+  
 Additionaly, use the 'requirements.txt' file to update the python packages required for building and running symphonyGPT.</p>
 
 <p>There is another README.md inside the source root folder symphonyGPT/README.md that describes the code in more detail 
