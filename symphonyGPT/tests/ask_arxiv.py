@@ -1,3 +1,4 @@
+from performers.api_extractor.generator.pdf_generator import PDFGenerator
 from performers.api_extractor.secondthoughts.arxiv_extractor import ArxivExtractor
 from symphony.classifier.huggingface.keyphrase_extraction_token_classifier import KeyphraseExtractionTokenClassifier
 from symphonyGPT.performers.language_model.openai_performers.gpt_4 import Gpt4
@@ -33,12 +34,18 @@ def main() -> None:
     )
 
     m_generate_article = Movement(
-        prompt_str="Generate an article based on '" + prompt + " using and citing the following publications with link': '{}' ",
+        prompt_str="Generate an article and its title based on '" + prompt + "using and citing the following list of "
+                                                                             "publications with link': '{}' ",
         performers=[Gpt4()]
     )
 
+    m_create_pdf = Movement(
+        prompt_str="{}",
+        performers=[PDFGenerator("research_paper.pdf")]
+    )
+
     print(prompt)
-    symphony = Symphony(movements=[m_extract, m_list_and_conclude, m_generate_article], null_answer_break=True)
+    symphony = Symphony(movements=[m_extract, m_list_and_conclude, m_generate_article, m_create_pdf], null_answer_break=True)
     res = symphony.perform(prompt)
     answer = res[0]["answer"]
     print(f"\n\n{answer}")
