@@ -1,4 +1,4 @@
-from performers.api_extractor.generator.pdf_generator import PDFGenerator
+from performers.generator.pdf_generator import PDFGenerator
 from performers.api_extractor.secondthoughts.arxiv_extractor import ArxivExtractor
 from symphony.classifier.huggingface.keyphrase_extraction_token_classifier import KeyphraseExtractionTokenClassifier
 from symphonyGPT.performers.language_model.openai_performers.gpt_4 import Gpt4

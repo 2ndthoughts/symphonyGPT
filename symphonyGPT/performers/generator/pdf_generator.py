@@ -1,5 +1,5 @@
 from gpt_4 import Gpt4
-from performers.api_extractor.generator.generator import Generator
+from performers.generator.generator import Generator
 from symphony.movement import Movement
 from symphony.symphony import Symphony
 from fpdf import FPDF
