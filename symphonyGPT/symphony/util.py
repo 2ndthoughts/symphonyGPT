@@ -1,3 +1,7 @@
+import json
+
+import demjson3
+
 import numpy as np
 from colorama import Fore
 import xml.etree.ElementTree as ET
@@ -35,6 +39,9 @@ class Util:
         self._message_print("--------------------------------------------------", Fore.WHITE)
 
     def extract_answer(self, answer):
+        if isinstance(answer, str):
+            answer = demjson3.decode(answer) # convert to json
+
         if isinstance(answer, list):  # if its an array
             if len(answer) > 1:
                 return [item['answer'] for item in answer if 'answer' in item]
