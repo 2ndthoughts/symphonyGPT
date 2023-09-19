@@ -30,13 +30,18 @@ def main() -> None:
     )
 
     m_list_and_conclude = Movement(
-        prompt_str="First, list all publications by id, published, title, and summary. " +
+        prompt_str="First, list all publications by id, authors, published, link, title, and summary. " +
                    "Next, based on all the publications, generate a conclusion for '" + prompt + "' : {} ",
         performers=[Gpt4()]
     )
 
+    m_generate_article = Movement(
+        prompt_str="Generate an article based on '" + prompt + " using and citing the following publications with link': '{}' ",
+        performers=[Gpt4()]
+    )
+
     print(prompt)
-    symphony = Symphony(movements=[m_extract, m_list_and_conclude], null_answer_break=True)
+    symphony = Symphony(movements=[m_extract, m_list_and_conclude, m_generate_article], null_answer_break=True)
     res = symphony.perform(prompt)
     answer = res[0]["answer"]
     print(f"\n\n{answer}")
