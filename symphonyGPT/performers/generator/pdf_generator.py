@@ -24,16 +24,12 @@ class PDFGenerator(Generator):
 
     def perform(self, prompt):
         self.util.debug_print("PDFGenerator.perform() called")
-
         pdf = FPDF()
         pdf.add_page()
         pdf.set_font(self.font, size=self.font_size)
-
         answer_text = self.util.extract_answer(prompt.get_prompt())
-
-        text = answer_text.encode('utf-8').decode('latin-1')
-        pdf.multi_cell(0, 10, text)
-
+        text = str(answer_text).encode('utf-8').decode('latin-1')
+        pdf.multi_cell(0, 10, text, align="L")
         pdf.output(self.output_file_name)
         self.set_raw_response(f"{self.output_file_name}")
 
