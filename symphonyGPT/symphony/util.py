@@ -1,10 +1,14 @@
+import io
 import json
+import re
+import sys
 
 import demjson3
 
 import numpy as np
 from colorama import Fore
 import xml.etree.ElementTree as ET
+
 
 class Util:
     def __init__(self):
@@ -40,7 +44,10 @@ class Util:
 
     def extract_answer(self, answer):
         if isinstance(answer, str):
-            answer = demjson3.decode(answer) # convert to json
+            try:
+                answer = demjson3.decode(answer)  # convert to json
+            except  demjson3.JSONDecodeError:
+                pass
 
         if isinstance(answer, list):  # if its an array
             if len(answer) > 1:
@@ -50,7 +57,7 @@ class Util:
             else:
                 return "No answer found"
         else:  # not an array
-            if isinstance(answer, dict):
+            if isinstance(answer, dict) and 'answer' in answer:
                 return answer['answer']
             else:
                 return answer
@@ -58,3 +65,33 @@ class Util:
     def xml_to_text(self, xml_string):
         root = ET.fromstring(xml_string)
         return ''.join(root.itertext())
+
+    def extract_between(self, text, sub1, sub2):
+        """
+        Extracts a substring from 'text' that is between the first occurrences of 'sub1' and 'sub2'
+        """
+        pattern = re.escape(sub1) + '(.*?)' + re.escape(sub2)
+        matches = re.search(pattern, text, re.DOTALL | re.IGNORECASE)
+        if matches:
+            return matches.group(1).strip()
+        return None
+
+    def capture_exec_output(self, code):
+        # Create an in-memory text stream
+        buffer = io.StringIO()
+
+        # Backup the current stdout
+        original_stdout = sys.stdout
+
+        # Redirect stdout to the buffer
+        sys.stdout = buffer
+
+        try:
+            # Execute the code
+            exec(code)
+        finally:
+            # Restore the original stdout
+            sys.stdout = original_stdout
+
+        # Return the content of the buffer
+        return buffer.getvalue()
