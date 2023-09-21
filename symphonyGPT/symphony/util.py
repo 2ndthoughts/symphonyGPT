@@ -49,18 +49,21 @@ class Util:
             except  demjson3.JSONDecodeError:
                 pass
 
-        if isinstance(answer, list):  # if its an array
-            if len(answer) > 1:
-                return [item['answer'] for item in answer if 'answer' in item]
-            elif len(answer) == 1:
-                return answer[0]['answer']
-            else:
-                return "No answer found"
-        else:  # not an array
-            if isinstance(answer, dict) and 'answer' in answer:
-                return answer['answer']
-            else:
-                return answer
+        try:
+            if isinstance(answer, list):  # if its an array
+                if len(answer) > 1:
+                    return [item['answer'] for item in answer if 'answer' in item]
+                elif len(answer) == 1:
+                    return answer[0]['answer']
+                else:
+                    return "No answer found"
+            else:  # not an array
+                if isinstance(answer, dict) and 'answer' in answer:
+                    return answer['answer']
+                else:
+                    return answer
+        except TypeError:
+            return answer
 
     def xml_to_text(self, xml_string):
         root = ET.fromstring(xml_string)
