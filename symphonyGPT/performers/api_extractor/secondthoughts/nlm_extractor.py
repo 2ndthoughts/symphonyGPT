@@ -86,7 +86,11 @@ class NLMExtractor(APIExtractor):
                     pmid = xml.find('PubmedArticle/MedlineCitation/PMID').text
                     issn = xml.find('PubmedArticle/MedlineCitation/Article/Journal/ISSN').text
                     article_title = xml.find('PubmedArticle/MedlineCitation/Article/ArticleTitle').text
-                    abstract_text = xml.find('PubmedArticle/MedlineCitation/Article/Abstract/AbstractText').text
+
+                    abstract_text = ""
+                    if xml.find('PubmedArticle/MedlineCitation/Article/Abstract/AbstractText') is not None:
+                        abstract_text = xml.find('PubmedArticle/MedlineCitation/Article/Abstract/AbstractText').text
+
                     summarized_text = self.summarize_result(abstract_text, prompt.get_prompt())
 
                     authors = ""
