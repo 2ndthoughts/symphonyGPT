@@ -4,6 +4,7 @@ from performers.generator.secondthoughts.prompt_context_generator import PromptC
 from performers.generator.python_code_runner import PythonCodeRunner
 from symphony.movement import Movement
 from symphony.symphony import Symphony
+from symphony.util import Util
 
 
 def main() -> None:
@@ -12,9 +13,10 @@ def main() -> None:
     # prompt = "write a client web service code to query arxiv for information regarding superconductors"
     # prompt = "write code that can calculate pi to the 20th decimal place"
     # prompt = "write code that sorts a list of numbers"
+    # prompt = "write code to scrape the website 'https://2ndthoughts.ai/' for details of the platform"
 
     m_generate_context = Movement(
-        performers=[PromptContextGenerator(number_of_questions=3)]
+        performers=[PromptContextGenerator(number_of_questions=4)]
     )
 
     m_respond = Movement(
@@ -50,7 +52,8 @@ def main() -> None:
         res = symphony.perform(res[0]["answer"])
 
     answer = res[0]["answer"]
-    print(f"\n\n{answer}")
+    print("--------------------------------------------------")
+    print(f"Result:\n\n{answer}")
 
 
 if __name__ == "__main__":
