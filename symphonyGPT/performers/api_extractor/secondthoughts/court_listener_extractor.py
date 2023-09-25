@@ -14,10 +14,11 @@ from bs4 import BeautifulSoup
 # :license: Licensed under the Non-Profit Open Software License version 3.0 see LICENSE for details.
 
 class CourtListenerExtractor(APIExtractor):
-    def __init__(self, fields=None, max_rnk=3):
+    def __init__(self, fields=None, max_rnk=3, query_term_joiner="AND"):
         super().__init__()
         self.max_rnk = max_rnk
         self.fields = fields
+        self.joiner = query_term_joiner
         self.api_token = APIKeys().get_api_key("courtlistener")
 
     def perform(self, prompt):
@@ -40,7 +41,7 @@ class CourtListenerExtractor(APIExtractor):
         for word in words:
             word = word.strip()
             if word != "":
-                q_arg += f'{word} AND '
+                q_arg += f'{word} {self.joiner} '
 
         params = {'q': q_arg[:-5], 'order_by': 'citeCount desc', 'stat_Precedential': 'on'}
         self.util.debug_print(f"CourtListenerExtractor.perform() params: {params}")
