@@ -13,7 +13,8 @@ from symphonyGPT.symphony.symphony import Symphony
 def main() -> None:
     # prompt = "are spatiotemporal techniques preferred in predicting outcomes"
     # prompt = "what are popular frameworks for multi agent LLMs cooperatively solving problems"
-    prompt = "what is the best technique for maximizing the context length of LLMs"
+    # prompt = "what is the best technique for maximizing the context length of LLMs"
+    prompt = "the techniques of prompt context generation and their effectiveness in LLMs"
     # prompt = "have room temperature superconductors been shown to work"
 
     # The symphony is composed of two movements
@@ -34,8 +35,9 @@ def main() -> None:
     )
 
     m_generate_article = Movement(
-        prompt_str="Generate an article and its title based on '" + prompt + "using and citing the following list of "
-                                                                             "publications with link': '{}' ",
+        prompt_str="Generate an article and its title based on '" + prompt + "using and citing the following "
+                                                                             "publications with title, authors, and "
+                                                                             "link as a list': '{}' ",
         performers=[Gpt4()]
     )
 
@@ -45,7 +47,8 @@ def main() -> None:
     )
 
     print(prompt)
-    symphony = Symphony(movements=[m_extract, m_list_and_conclude, m_generate_article, m_create_pdf], null_answer_break=True)
+    symphony = Symphony(movements=[m_extract, m_list_and_conclude, m_generate_article, m_create_pdf],
+                        null_answer_break=True)
     res = symphony.perform(prompt)
     answer = res[0]["answer"]
     print(f"\n\n{answer}")
