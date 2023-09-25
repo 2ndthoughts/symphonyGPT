@@ -1,5 +1,4 @@
 import io
-import json
 import re
 import sys
 
@@ -76,6 +75,7 @@ class Util:
         pattern = re.escape(sub1) + '(.*?)' + re.escape(sub2)
         matches = re.search(pattern, text, re.DOTALL | re.IGNORECASE)
         if matches:
+            self.debug_print(f"extract_between:\n{matches.group(1).strip()}")
             return matches.group(1).strip()
         return None
 
@@ -91,7 +91,7 @@ class Util:
 
         try:
             # Execute the code
-            exec(code)
+            exec(code, globals())
         finally:
             # Restore the original stdout
             sys.stdout = original_stdout
