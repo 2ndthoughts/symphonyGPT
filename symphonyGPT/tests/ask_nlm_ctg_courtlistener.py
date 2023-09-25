@@ -17,17 +17,18 @@ from symphonyGPT.symphony.symphony import Symphony
 
 
 def main() -> None:
-    prompt = "is Ivermectin allowed to treat COVID-19"
+    # prompt = "is Ivermectin allowed to treat COVID-19"
+    prompt = "what are the neurological manifestations of thyroid disorder"
     # prompt = "Is it legal to treat depression with cannabis"
     # prompt = "can abortion be performed after 20 weeks of pregnancy"
 
     m_extract = Movement(
-        #prompt_classifier=[KeyphraseExtractionTokenClassifier()],
+        prompt_classifier=[KeyphraseExtractionTokenClassifier()],
         performers=[NLMExtractor(max_rnk=3), CTGExtractor(max_trials_returned=3), CourtListenerExtractor(max_rnk=3)]
     )
 
     m_list_and_conclude = Movement(
-        prompt_str="First, list all the documents by source, id, title, and summary, " +
+        prompt_str="First, list all the documents by source, id, title, authors, date, and summary, " +
                    "then based on all the documents, generate a conclusion for '" + prompt + "' : {} ",
         performers=[Gpt4()]
     )
