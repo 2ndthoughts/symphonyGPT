@@ -83,9 +83,17 @@ class NLMExtractor(APIExtractor):
                 try:
                     text = response.content
 
-                    pmid = xml.find('PubmedArticle/MedlineCitation/PMID').text
-                    issn = xml.find('PubmedArticle/MedlineCitation/Article/Journal/ISSN').text
-                    article_title = xml.find('PubmedArticle/MedlineCitation/Article/ArticleTitle').text
+                    pmid = ""
+                    if xml.find('PubmedArticle/MedlineCitation/PMID') is not None:
+                        pmid = xml.find('PubmedArticle/MedlineCitation/PMID').text
+
+                    issn = ""
+                    if xml.find('PubmedArticle/MedlineCitation/Article/Journal/ISSN') is not None:
+                        issn = xml.find('PubmedArticle/MedlineCitation/Article/Journal/ISSN').text
+
+                    article_title = ""
+                    if xml.find('PubmedArticle/MedlineCitation/Article/ArticleTitle') is not None:
+                        article_title = xml.find('PubmedArticle/MedlineCitation/Article/ArticleTitle').text
 
                     abstract_text = ""
                     if xml.find('PubmedArticle/MedlineCitation/Article/Abstract/AbstractText') is not None:
