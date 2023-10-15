@@ -1,4 +1,4 @@
-from performers.performer import Performer
+from symphonyGPT.performers.performer import Performer
 
 
 class Generator(Performer):

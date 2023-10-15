@@ -1,8 +1,8 @@
 from gpt_4 import Gpt4
-from performers.generator.generator import Generator
-from symphony.movement import Movement
-from symphony.prompt import Prompt
-from symphony.symphony import Symphony
+from symphonyGPT.performers.generator.generator import Generator
+from symphonyGPT.symphony.movement import Movement
+from symphonyGPT.symphony.prompt import Prompt
+from symphonyGPT.symphony.symphony import Symphony
 
 
 # :copyright: Copyright 2023 by 2ndthoughts.ai david@2ndthoughts.ai.

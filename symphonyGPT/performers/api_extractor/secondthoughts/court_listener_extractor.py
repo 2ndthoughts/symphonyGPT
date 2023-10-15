@@ -1,7 +1,7 @@
 import json
 import requests
 
-from performers.api_keys import APIKeys
+from symphonyGPT.performers.api_keys import APIKeys
 from symphonyGPT.performers.api_extractor.api_extractor import APIExtractor
 from symphonyGPT.symphony.classifier.huggingface.keyphrase_extraction_token_classifier import \
     KeyphraseExtractionTokenClassifier

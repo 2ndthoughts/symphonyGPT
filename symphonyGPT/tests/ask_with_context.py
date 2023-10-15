@@ -1,9 +1,9 @@
 from gpt_4 import Gpt4
-from performers.generator.pdf_generator import PDFGenerator
-from performers.generator.secondthoughts.prompt_context_generator import PromptContextGenerator
-from performers.generator.python_code_runner import PythonCodeRunner
-from symphony.movement import Movement
-from symphony.symphony import Symphony
+from symphonyGPT.performers.generator.pdf_generator import PDFGenerator
+from symphonyGPT.performers.generator.secondthoughts.prompt_context_generator import PromptContextGenerator
+from symphonyGPT.performers.generator.python_code_runner import PythonCodeRunner
+from symphonyGPT.symphony.movement import Movement
+from symphonyGPT.symphony.symphony import Symphony
 
 
 def main() -> None:

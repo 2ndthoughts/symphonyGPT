@@ -1,12 +1,12 @@
 import chromadb
 
-from performers.generator.pdf_generator import PDFGenerator
-from performers.api_extractor.secondthoughts.arxiv_extractor import ArxivExtractor
-from symphony.classifier.huggingface.keyphrase_extraction_token_classifier import KeyphraseExtractionTokenClassifier
-from symphony.util import Util
-from performers.language_model.openai_performers.gpt_4 import Gpt4
-from symphony.movement import Movement
-from symphony.symphony import Symphony
+from symphonyGPT.performers.generator.pdf_generator import PDFGenerator
+from symphonyGPT.performers.api_extractor.secondthoughts.arxiv_extractor import ArxivExtractor
+from symphonyGPT.symphony.classifier.huggingface.keyphrase_extraction_token_classifier import KeyphraseExtractionTokenClassifier
+from symphonyGPT.symphony.util import Util
+from symphonyGPT.performers.language_model.openai_performers.gpt_4 import Gpt4
+from symphonyGPT.symphony.movement import Movement
+from symphonyGPT.symphony.symphony import Symphony
 
 
 # in this example, make sure to get an openai api key according to this page
@@ -55,7 +55,7 @@ def main() -> None:
                         null_answer_break=True)
     res = symphony.perform(prompt)
 
-    Util().print_collection_counts()
+    # Util().print_collection_counts()
 
     answer = res[0]["answer"]
     print(f"\n\n{answer}")

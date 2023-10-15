@@ -1,6 +1,6 @@
 import openai
 
-from performers.api_keys import APIKeys
+from symphonyGPT.performers.api_keys import APIKeys
 from symphonyGPT.performers.language_model.language_model_performer import LanguageModelPerformer
 
 
