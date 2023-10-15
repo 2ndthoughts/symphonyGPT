@@ -4,7 +4,6 @@ from performers.generator.secondthoughts.prompt_context_generator import PromptC
 from performers.generator.python_code_runner import PythonCodeRunner
 from symphony.movement import Movement
 from symphony.symphony import Symphony
-from symphony.util import Util
 
 
 def main() -> None:

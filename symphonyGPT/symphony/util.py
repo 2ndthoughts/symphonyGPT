@@ -2,6 +2,7 @@ import io
 import re
 import sys
 
+import chromadb
 import demjson3
 
 import numpy as np
@@ -40,6 +41,24 @@ class Util:
 
     def print_line(self):
         self._message_print("--------------------------------------------------", Fore.WHITE)
+
+    def print_collection_counts(self):
+        self.print_line()
+        self.print("Collection Counts")
+        self.print_line()
+        db_client = chromadb.Client()
+        for collection in db_client.list_collections():
+            self.print(f"{collection.name}: {collection.count()}")
+        self.print_line()
+
+    def get_collection(self, name):
+        db_client = chromadb.Client()
+        return db_client.get_or_create_collection(name=name)
+
+    def add_to_collection(self, name, data):
+        collection = self.get_collection(name)
+        collection.add(data)
+
 
     def extract_answer(self, answer):
         if isinstance(answer, str):
