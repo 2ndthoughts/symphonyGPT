@@ -1,8 +1,5 @@
 import json
 import concurrent.futures
-
-import chromadb
-
 from symphonyGPT.performers.language_model.openai_performers.gpt_35_turbo_0301 import Gpt35Turbo0301
 from symphonyGPT.symphony.prompt import Prompt
 from symphonyGPT.symphony.util import Util
@@ -30,8 +27,6 @@ class Movement:
         self.count = 1
         self.outcome_strategy = outcome_strategy
         self.conductor = conductor
-        self.db_client = chromadb.Client()
-        self.collection = self.db_client.get_or_create_collection(name=f"m_{self.__class__.__name__}")
 
     def worker(self, performer, current_response):
         self.util.debug_print(

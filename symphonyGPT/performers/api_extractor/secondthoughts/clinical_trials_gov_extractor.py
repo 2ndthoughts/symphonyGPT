@@ -1,6 +1,9 @@
 import json
 import requests
 from symphonyGPT.performers.api_extractor.api_extractor import APIExtractor
+from symphonyGPT.symphony.movement import Movement
+from symphonyGPT.symphony.symphony import Symphony
+
 
 # :copyright: Copyright 2023 by 2ndthoughts.ai david@2ndthoughts.ai.
 # :license: Licensed under the Non-Profit Open Software License version 3.0 see LICENSE for details.
@@ -28,8 +31,6 @@ class CTGExtractor(APIExtractor):
 
         if self.fields is None:
             self.fields = "NCTId,LeadSponsorName,CompletionDate,BriefTitle,DetailedDescription"
-
-        json_answer = json.loads("{}")
 
         # loop through the results and for each result, summarize the DetailedDescription
         for self.result_index in range(1, self.max_trials_returned + 1):
@@ -68,6 +69,38 @@ class CTGExtractor(APIExtractor):
                 except ValueError:  # includes simplejson.decoder.JSONDecodeError
                     print('Decoding JSON has failed')
 
-            json_answer[f"result_set_{self.result_index}"] = data
+            study_fields = data["StudyFieldsResponse"]["StudyFields"][0]
+            id = study_fields["NCTId"][0]
+            self.collection.add(
+                documents=[study_fields["DetailedDescription"]],
+                metadatas=[{"id": id,
+                            "sponsor": study_fields["LeadSponsorName"][0],
+                            "completion_date": study_fields["CompletionDate"][0],
+                            "title": study_fields["BriefTitle"][0],
+                            "summary": study_fields["DetailedDescription"],
+                            "primary_outcome": study_fields["PrimaryOutcomeDescription"][0]}],
+                ids=[id]
+            )
 
-        self.set_raw_response(json.dumps(json_answer, indent=4, sort_keys=True))
+        ef_val = self.default_embedding_function([prompt.get_prompt()])
+        embedded_answers = self.collection.query(
+            query_embeddings=ef_val,
+            n_results=self.max_embeddings_results
+        )
+
+        answer = []
+        for metadatas in embedded_answers["metadatas"]:
+            for metadata in metadatas:
+                answer.append(metadata)
+
+        self.set_raw_response(answer)
+
+# test main
+if __name__ == "__main__":
+    prompt = "does magnesium reduce high blood pressure"
+    m_test = Movement(
+        performers=[CTGExtractor()]
+    )
+
+    symphony = Symphony(movements=[m_test], null_answer_break=True)
+    res = symphony.perform(prompt)

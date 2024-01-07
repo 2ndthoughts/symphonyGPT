@@ -1,3 +1,5 @@
+import chromadb
+
 from symphonyGPT.performers.api_extractor.secondthoughts.clinical_trials_gov_extractor import CTGExtractor
 from symphonyGPT.performers.language_model.openai_performers.gpt_4 import Gpt4
 from symphonyGPT.symphony.classifier.huggingface.ade_drug_effect_token_classifier import \
@@ -46,6 +48,16 @@ def main() -> None:
     res = symphony.perform(prompt)
     answer = res[0]["answer"]
     print(f"\n\n{answer}")
+
+    db_client = chromadb.Client()
+    collections = db_client.list_collections()
+    for collection in collections:
+        print(collection.name)
+        #print(collection.peek())
+        print(collection.count())
+
+    for collection in collections:
+        db_client.delete_collection(name=collection.name)
 
 
 if __name__ == "__main__":

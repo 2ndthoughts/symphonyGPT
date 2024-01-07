@@ -19,8 +19,8 @@ def main() -> None:
     # prompt = "company director did not recuse himself from merger negotiations resulting in a breach of fiduciary duty" # did not produce results
     # prompt = "breach of fiduciary duty by a director of a company due to withholding of information and failure to recuse himself from merger negotiations"
     # prompt = "valuation company collaborated with buyer company during a merger in order to produce a high value merger in order to flip the company for a profit"
-    # prompt = "is Ivermectin allowed to treat COVID"
-    prompt = "is it legal to withhold information after signing but before closing of merger"
+    prompt = "is Ivermectin allowed to treat COVID"
+    # prompt = "is it legal to withhold information after signing but before closing of merger"
 
     # The symphony is composed of two movements
     #  * The first movement is to extract the drug and effect from the prompt then list all

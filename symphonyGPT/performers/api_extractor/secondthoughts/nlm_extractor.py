@@ -59,7 +59,6 @@ class NLMExtractor(APIExtractor):
         # https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=37421961&retmode=text&rettype=abstract
 
         kount = 0
-        answer = []
         for id in ids:
             kount = kount + 1
             if kount > self.max_rnk:
@@ -109,7 +108,7 @@ class NLMExtractor(APIExtractor):
                         if author.find('ForeName') is not None:
                             first_name = author.find('ForeName').text
 
-                        authors += authors + f"{last_name}, {first_name}; "
+                        authors += f"{last_name}, {first_name}; "
 
                     if authors != "":
                         authors = authors[:-2]
@@ -139,9 +138,24 @@ class NLMExtractor(APIExtractor):
                     sub_answer["Authors"] = authors
                     sub_answer["Link"] = f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
 
-                    answer.append(sub_answer)
+                    self.collection.add(
+                        documents=[summarized_text],
+                        metadatas=[sub_answer],
+                        ids=[f"{pmid}"]
+                    )
                 except ValueError:
                     print('Decoding output has failed')
+
+        ef_val = self.default_embedding_function([prompt.get_prompt()])
+        embedded_answers = self.collection.query(
+            query_embeddings=ef_val,
+            n_results=self.max_embeddings_results
+        )
+
+        answer = []
+        for metadatas in embedded_answers["metadatas"]:
+            for metadata in metadatas:
+                answer.append(metadata)
 
         self.set_raw_response(answer)
 
@@ -150,7 +164,7 @@ class NLMExtractor(APIExtractor):
 if __name__ == "__main__":
     m_test = Movement(
         prompt_classifier=[AdeDrugEffectTokenClassifier()],
-        performers=[NLMExtractor()]
+        performers=[NLMExtractor(max_rnk=5)]
     )
     symphony = Symphony(movements=[m_test], null_answer_break=True)
     res = symphony.perform("does metformin increase lifespan")

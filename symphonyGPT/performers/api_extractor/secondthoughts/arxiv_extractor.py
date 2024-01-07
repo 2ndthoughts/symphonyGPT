@@ -11,9 +11,8 @@ from symphonyGPT.symphony.symphony import Symphony
 
 class ArxivExtractor(APIExtractor):
 
-    def __init__(self, fields=None, max_results=5):
-        super().__init__()
-        self.max_results = max_results
+    def __init__(self, max_results=5, max_embeddings_results=3):
+        super().__init__(max_results, max_embeddings_results)
 
     def perform(self, prompt):
         classifications = prompt.get_classifications()
@@ -46,7 +45,7 @@ class ArxivExtractor(APIExtractor):
                         self.util.error_print('Decoding XML has failed')
 
                     ns = {'ns':'http://www.w3.org/2005/Atom'}
-                    sub_answer = json.loads("{}")
+                    #sub_answer = json.loads("{}")
                     if xml.find('ns:entry', namespaces=ns) is None:
                         self.util.debug_print(f"ArxivExtractor.perform() no content found")
                         break
@@ -64,16 +63,30 @@ class ArxivExtractor(APIExtractor):
                     if len(authors) > 0:
                         author_names = author_names[:-2]
 
-                    sub_answer["id"] = id
-                    sub_answer["published"] = published
-                    sub_answer["title"] = title
-                    sub_answer["summary"] = summary
-                    sub_answer["authors"] = author_names
-                    sub_answer["link"] = link
+                    # add to embeddings array
+                    self.collection.add(
+                        documents=[summary],
+                        metadatas=[{"id": id,
+                                    "published": published,
+                                    "title": title,
+                                    "authors": author_names,
+                                    "link": link,
+                                    "summary": summary}],
+                        ids=[id]
+                    )
 
-                    answer.append(sub_answer)
                 except ValueError:
                     print('Decoding output has failed')
+
+        ef_val = self.default_embedding_function([prompt.get_prompt()])
+        embedded_answers = self.collection.query(
+            query_embeddings=ef_val,
+            n_results=self.max_embeddings_results
+        )
+
+        for metadatas in embedded_answers["metadatas"]:
+            for metadata in metadatas:
+                answer.append(metadata)
 
         self.set_raw_response(answer)
 

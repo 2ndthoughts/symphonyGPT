@@ -110,6 +110,22 @@ class CourtListenerExtractor(APIExtractor):
 
                     self.util.debug_print(json.dumps(json_answer_set, indent=4, sort_keys=True))
                     self.util.debug_print_line()
+
+                    self.collection.add(
+                        documents=[summarize_this_str],
+                        metadatas=[{"id": case['id'],
+                                    "cluster_id": case['cluster_id'],
+                                    "absolute_url": f"https://www.courtlistener.com{case['absolute_url']}",
+                                    "caseName": case['caseName'],
+                                    "court": case['court'],
+                                    "docketNumber": case['docketNumber'],
+                                    "judge": case['judge'],
+                                    "dateFiled": case['dateFiled'],
+                                    "status": case['status'],
+                                    "citeCount": case['citeCount'],
+                                    "caseSummary": summarize_this_str}],
+                        ids=[f"{case['id']}"]
+                    )
                 else:
                     print('Failed to retrieve opinion data. Status code:', opinion_response.status_code,
                           opinion_response.text)
@@ -123,7 +139,19 @@ class CourtListenerExtractor(APIExtractor):
         else:
             print('Failed to retrieve case data. Status code:', response.status_code, response.text)
 
-        self.set_raw_response(json.dumps(json_answer, indent=4, sort_keys=True))
+        ef_val = self.default_embedding_function([prompt.get_prompt()])
+        embedded_answers = self.collection.query(
+            query_embeddings=ef_val,
+            n_results=self.max_embeddings_results
+        )
+
+        answer = []
+        for metadatas in embedded_answers["metadatas"]:
+            for metadata in metadatas:
+                answer.append(metadata)
+
+        self.set_raw_response(answer)
+        #self.set_raw_response(json.dumps(json_answer, indent=4, sort_keys=True))
 
 
 # test main

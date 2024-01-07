@@ -29,7 +29,7 @@ def main() -> None:
     
     m_extract = Movement(
         prompt_classifier=[BiomedicalNerAllTokenClassifier()],
-        performers=[NLMExtractor(max_rnk=5)]
+        performers=[NLMExtractor(max_rnk=15)]
     )
 
     m_list_and_conclude = Movement(

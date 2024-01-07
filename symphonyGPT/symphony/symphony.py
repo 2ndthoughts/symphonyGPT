@@ -1,8 +1,6 @@
 import json
 import timeit
 
-import chromadb
-
 from symphonyGPT.symphony.util import Util
 
 
@@ -23,8 +21,6 @@ class Symphony:
         self.movements = movements
         self.null_answer_break = null_answer_break
         self.enumerated_responses = ""
-        self.db_client = chromadb.Client()
-        self.collection = self.db_client.get_or_create_collection(name=f"s_{self.__class__.__name__}")
 
     def perform(self, prompt_str=None):
         self.start_time = timeit.default_timer()

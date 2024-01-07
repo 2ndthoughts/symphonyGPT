@@ -1,13 +1,20 @@
+import chromadb
+from chromadb.utils import embedding_functions
+
 from symphonyGPT.performers.language_model.openai_performers.gpt_4 import Gpt4
 from symphonyGPT.performers.performer import Performer
 from symphonyGPT.symphony.prompt import Prompt
 
 
 class APIExtractor(Performer):
-    def __init__(self, fields=None, max_rnk=5):
+    def __init__(self, max_results=5, max_embeddings_results=3):
         super().__init__()
-        self.max_results = max_rnk
+        self.max_results = max_results
         self.set_type("api_extractor")
+        self.db_client = chromadb.Client()
+        self.collection = self.db_client.get_or_create_collection(name=f"s_{self.__class__.__name__}")
+        self.default_embedding_function = embedding_functions.DefaultEmbeddingFunction()
+        self.max_embeddings_results = max_embeddings_results
 
     def create_query_str_from_classifier(self, classifications):
         query_str = ""

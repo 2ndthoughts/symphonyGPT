@@ -1,10 +1,10 @@
 import chromadb
 
-from symphonyGPT.performers.generator.pdf_generator import PDFGenerator
 from symphonyGPT.performers.api_extractor.secondthoughts.arxiv_extractor import ArxivExtractor
-from symphonyGPT.symphony.classifier.huggingface.keyphrase_extraction_token_classifier import KeyphraseExtractionTokenClassifier
-from symphonyGPT.symphony.util import Util
+from symphonyGPT.performers.generator.pdf_generator import PDFGenerator
 from symphonyGPT.performers.language_model.openai_performers.gpt_4 import Gpt4
+from symphonyGPT.symphony.classifier.huggingface.keyphrase_extraction_token_classifier import \
+    KeyphraseExtractionTokenClassifier
 from symphonyGPT.symphony.movement import Movement
 from symphonyGPT.symphony.symphony import Symphony
 
@@ -14,7 +14,7 @@ from symphonyGPT.symphony.symphony import Symphony
 # symphonyGPT/performers/api_keys.py
 
 def main() -> None:
-    # prompt = "are spatiotemporal techniques preferred in predicting outcomes"
+    # prompt = "are spatiotemporal techniques preferred in predicting outc f gomes"
     # prompt = "what are popular frameworks for multi-agent LLMs cooperatively solving problems"
     # prompt = "what is the best technique for maximizing the context length of LLMs"
     # prompt = "the techniques of prompt context generation and their effectiveness in LLMs"
@@ -29,7 +29,7 @@ def main() -> None:
 
     m_extract = Movement(
         prompt_classifier=[KeyphraseExtractionTokenClassifier()],
-        performers=[ArxivExtractor(max_results=5)]
+        performers=[ArxivExtractor(max_results=15)]
     )
 
     m_list_and_conclude = Movement(
@@ -59,6 +59,16 @@ def main() -> None:
 
     answer = res[0]["answer"]
     print(f"\n\n{answer}")
+
+    db_client = chromadb.Client()
+    collections = db_client.list_collections()
+    for collection in collections:
+        print(collection.name)
+        #print(collection.peek())
+        print(collection.count())
+
+    for collection in collections:
+        db_client.delete_collection(name=collection.name)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,3 @@
-import chromadb
 from symphonyGPT.symphony.prompt import Prompt
 from symphonyGPT.symphony.util import Util
 
@@ -8,8 +7,6 @@ class Performer:
         self.type = "performer"
         self.__response_raw_text = None
         self.util = Util()
-        self.db_client = chromadb.Client()
-        self.collection = self.db_client.get_or_create_collection(name=f"p_{self.__class__.__name__}")
 
     def perform(self, prompt: Prompt):
         raise NotImplementedError("Subclass must implement abstract method")
