@@ -160,3 +160,7 @@ cattrs~=23.2.3
 jsonpointer~=2.4
 typing_extensions~=4.9.0
 pydantic_core~=2.14.6
+pathlib~=1.0.1
+ipython~=8.20.0
+executing~=2.0.1
+asttokens~=2.4.1
