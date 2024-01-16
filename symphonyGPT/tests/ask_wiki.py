@@ -1,10 +1,7 @@
-from google_performers.gemini_pro import GeminiPro
 from symphonyGPT.performers.api_extractor.secondthoughts.wikipedia_extractor import WikipediaExtractor
 from symphonyGPT.performers.generator.pdf_generator import PDFGenerator
 from symphonyGPT.performers.generator.secondthoughts.prompt_context_generator import PromptContextGenerator
 from symphonyGPT.performers.language_model.openai_performers.gpt_4 import Gpt4
-from symphonyGPT.symphony.classifier.huggingface.keyphrase_extraction_token_classifier import \
-    KeyphraseExtractionTokenClassifier
 from symphonyGPT.symphony.movement import Movement
 from symphonyGPT.symphony.symphony import Symphony
 

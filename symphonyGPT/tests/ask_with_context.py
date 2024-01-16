@@ -1,4 +1,4 @@
-from gpt_4 import Gpt4
+from symphonyGPT.performers.language_model.openai_performers.gpt_4 import Gpt4
 from symphonyGPT.performers.generator.pdf_generator import PDFGenerator
 from symphonyGPT.performers.generator.secondthoughts.prompt_context_generator import PromptContextGenerator
 from symphonyGPT.performers.generator.python_code_runner import PythonCodeRunner
