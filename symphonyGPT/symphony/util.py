@@ -1,10 +1,8 @@
 import io
 import re
 import sys
-
 import chromadb
 import demjson3
-
 import numpy as np
 from colorama import Fore
 import xml.etree.ElementTree as ET
@@ -64,7 +62,7 @@ class Util:
         if isinstance(answer, str):
             try:
                 answer = demjson3.decode(answer)  # convert to json
-            except  demjson3.JSONDecodeError:
+            except demjson3.JSONDecodeError:
                 pass
 
         try:
