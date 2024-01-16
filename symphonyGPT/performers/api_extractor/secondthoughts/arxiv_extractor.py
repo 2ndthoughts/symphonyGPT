@@ -1,4 +1,3 @@
-import json
 import xml.etree.ElementTree as ElementTree
 import requests
 from symphonyGPT.performers.api_extractor.api_extractor import APIExtractor
@@ -11,7 +10,7 @@ from symphonyGPT.symphony.symphony import Symphony
 
 class ArxivExtractor(APIExtractor):
 
-    def __init__(self, max_results=5, max_embeddings_results=3):
+    def __init__(self, max_results=5, max_embeddings_results=5):
         super().__init__(max_results, max_embeddings_results)
 
     def perform(self, prompt):
