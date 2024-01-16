@@ -1,13 +1,10 @@
 import chromadb
 from chromadb.utils import embedding_functions
-
-from symphonyGPT.performers.language_model.openai_performers.gpt_4 import Gpt4
 from symphonyGPT.performers.performer import Performer
-from symphonyGPT.symphony.prompt import Prompt
 
 
 class APIExtractor(Performer):
-    def __init__(self, max_results=5, max_embeddings_results=3):
+    def __init__(self, max_results=5, max_embeddings_results=5):
         super().__init__()
         self.max_results = max_results
         self.set_type("api_extractor")
@@ -30,17 +27,3 @@ class APIExtractor(Performer):
             query_str = query_str[:-1]
 
         return query_str
-
-    def summarize_result(self, summarize_this_str, summarizing_prompt, prompt_str=None):
-        gpt4 = Gpt4()
-        if prompt_str is None:
-            prompt_str = (f"According to the question '{summarizing_prompt}', summarize the following "
-                          f"'{summarize_this_str}'")
-
-        sum_prompt = Prompt()
-        sum_prompt.set_prompt(prompt_str)
-        gpt4.perform(sum_prompt)
-        summarize_this_str = gpt4.get_raw_response()
-        # remove the prompt_str from the summarized DetailedDescription
-        summarize_this_str = summarize_this_str.replace(prompt_str, "")
-        return summarize_this_str
