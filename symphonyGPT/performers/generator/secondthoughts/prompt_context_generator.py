@@ -1,4 +1,4 @@
-from gpt_4 import Gpt4
+from symphonyGPT.performers.language_model.openai_performers.gpt_4 import Gpt4
 from symphonyGPT.performers.generator.generator import Generator
 from symphonyGPT.symphony.movement import Movement
 from symphonyGPT.symphony.prompt import Prompt
@@ -23,7 +23,7 @@ class PromptContextGenerator(Generator):
         # use Gpt4 to generate questions to ask human to get more context
         # for the prompt
         context_questions_prompt = (
-            f"ask {self.number_of_questions} questions to clarify the users intent regarding '{prompt_str}', respond "
+            f"ask {self.number_of_questions} questions to clarify the user's intent regarding '{prompt_str}', respond "
             f"exactly with the questions only")
         q_prompt = Prompt()
         q_prompt.set_prompt(context_questions_prompt)
