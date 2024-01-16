@@ -39,7 +39,10 @@ class Movement:
 
         # self.prompt is a Prompt class object
         # if self.prompt.get_prompt() is None:
-        self.prompt.set_prompt(prompt_str)  # set the prompt_str into prompt object
+
+        prompt_str_answer = self.util.extract_answer(prompt_str)
+
+        self.prompt.set_prompt(prompt_str_answer)  # set the prompt_str into prompt object
         # if this is the first movement ==  None
         self.util.debug_print(f"Movement.perform() prompt: {self.prompt.get_prompt()}")
 
