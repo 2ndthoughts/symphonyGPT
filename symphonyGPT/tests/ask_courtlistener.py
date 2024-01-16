@@ -1,4 +1,5 @@
 from symphonyGPT.performers.api_extractor.secondthoughts.court_listener_extractor import CourtListenerExtractor
+from symphonyGPT.performers.generator.pdf_generator import PDFGenerator
 from symphonyGPT.performers.language_model.openai_performers.gpt_4 import Gpt4
 from symphonyGPT.symphony.classifier.huggingface.keyphrase_extraction_token_classifier import \
     KeyphraseExtractionTokenClassifier
@@ -15,12 +16,8 @@ from symphonyGPT.symphony.symphony import Symphony
 
 
 def main() -> None:
-    # prompt = "breach of professional duty of care and tortious interference with contract and prospective economic advantage"
-    # prompt = "company director did not recuse himself from merger negotiations resulting in a breach of fiduciary duty" # did not produce results
-    # prompt = "breach of fiduciary duty by a director of a company due to withholding of information and failure to recuse himself from merger negotiations"
-    # prompt = "valuation company collaborated with buyer company during a merger in order to produce a high value merger in order to flip the company for a profit"
-    prompt = "is Ivermectin allowed to treat COVID"
-    # prompt = "is it legal to withhold information after signing but before closing of merger"
+
+    prompt = "climate change and global warming are caused by human activity"
 
     # The symphony is composed of two movements
     #  * The first movement is to extract the drug and effect from the prompt then list all
@@ -31,17 +28,23 @@ def main() -> None:
     
     m_extract = Movement(
         # prompt_classifier=[KeyphraseExtractionTokenClassifier()],
-        performers=[CourtListenerExtractor(max_rnk=10)]
+        performers=[CourtListenerExtractor(max_rnk=8)]
     )
 
     m_list_and_conclude = Movement(
-        prompt_str="First list all the cases by caseName, absolute_url, court, docketNumber, dateFiled and the caseSummary. " +
-                   "Then from all the listed cases, select the best case to cite for the allegation '" + prompt + "' : {} ",
+        prompt_str="Summarize the findings and list only the related cases by caseName, absolute_url, court, "
+                   "docketNumber, dateFiled and the caseSummary. " +
+                   "Then from the related cases, select the best case to cite for the allegation '" + prompt + "' : {} ",
         performers=[Gpt4()]
     )
 
+    m_create_pdf = Movement(
+        prompt_str="{}",
+        performers=[PDFGenerator("court_research.pdf")]
+    )
+
     print(prompt)
-    symphony = Symphony(movements=[m_extract, m_list_and_conclude], null_answer_break=True)
+    symphony = Symphony(movements=[m_extract, m_list_and_conclude, m_create_pdf], null_answer_break=True)
     res = symphony.perform(prompt)
     answer = res[0]["answer"]
     print(f"\n\n{answer}")

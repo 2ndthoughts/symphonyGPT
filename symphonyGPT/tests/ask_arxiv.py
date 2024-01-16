@@ -19,7 +19,8 @@ def main() -> None:
     # prompt = "what is the best technique for maximizing the context length of LLMs"
     # prompt = "the techniques of prompt context generation and their effectiveness in LLMs"
     # prompt = "have room temperature superconductors been shown to work"
-    prompt = "spatiotemporal prediction using LLM context embeddings"
+    # prompt = "spatiotemporal prediction using LLM context embeddings"
+    prompt = "what are the advances in rocket propulsion including the argon hall thruster"
 
     # The symphony is composed of two movements
     #  * list all the studies from arxiv based on a search of the prompt

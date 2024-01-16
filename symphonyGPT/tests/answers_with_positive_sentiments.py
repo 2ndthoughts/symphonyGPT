@@ -1,9 +1,6 @@
+from google_performers.gemini_pro import GeminiPro
+from gpt_4 import Gpt4
 from symphonyGPT.performers.language_model.openai_performers.gpt_35_turbo_0301 import Gpt35Turbo0301
-from symphonyGPT.performers.language_model.openai_performers.text_ada_001 import TextAda001
-from symphonyGPT.performers.language_model.openai_performers.text_babbage_001 import TextBabbage001
-from symphonyGPT.performers.language_model.openai_performers.text_curie_001 import TextCurie001
-from symphonyGPT.performers.language_model.openai_performers.text_davinci_002 import TextDavinci002
-from symphonyGPT.performers.language_model.openai_performers.text_davinci_003 import TextDavinci003
 from symphonyGPT.symphony.movement import Movement
 from symphonyGPT.symphony.outcome_strategy.huggingface.sentiment_all_positive import SentimentAllPositive
 from symphonyGPT.symphony.symphony import Symphony
@@ -18,12 +15,9 @@ def main() -> None:
 
     movement_1 = Movement(
         performers=[
-            TextCurie001(),
-            TextBabbage001(),
-            TextAda001(),
-            TextDavinci002(),
-            TextDavinci003(),
-            Gpt35Turbo0301()
+            GeminiPro(),
+            Gpt35Turbo0301(),
+            Gpt4()
         ],
         outcome_strategy=SentimentAllPositive(format="answer_only")
     )
