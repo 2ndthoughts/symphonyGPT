@@ -1,4 +1,4 @@
-import json
+from symphonyGPT.symphony import summarizer
 import requests
 from symphonyGPT.performers.api_extractor.api_extractor import APIExtractor
 from symphonyGPT.symphony.movement import Movement
@@ -61,7 +61,7 @@ class CTGExtractor(APIExtractor):
                         detailed_description = data["StudyFieldsResponse"]["StudyFields"][0]["DetailedDescription"]
                         if detailed_description is not None:
                             # use Gpt4 to summarize the DetailedDescription
-                            detailed_description = self.summarize_result(detailed_description, prompt.get_prompt())
+                            detailed_description = summarizer.summarize_result(detailed_description, prompt.get_prompt())
 
                     # put the summarized DetailedDescription back into the data
                     if detailed_description != "":
@@ -77,8 +77,7 @@ class CTGExtractor(APIExtractor):
                             "sponsor": study_fields["LeadSponsorName"][0],
                             "completion_date": study_fields["CompletionDate"][0],
                             "title": study_fields["BriefTitle"][0],
-                            "summary": study_fields["DetailedDescription"],
-                            "primary_outcome": study_fields["PrimaryOutcomeDescription"][0]}],
+                            "summary": study_fields["DetailedDescription"]}],
                 ids=[id]
             )
 
