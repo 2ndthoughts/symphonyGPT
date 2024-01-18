@@ -11,14 +11,8 @@ from symphonyGPT.symphony.symphony import Symphony
 
 
 def main() -> None:
-    # prompt = "does metformin increase lifespan"
-    # prompt = "has the average cohort size in clinical trials targeting longevity with Metformin increased or decreased over the past 10 years"
-    # prompt = "What is the average starting dose of Rapamycin used in clinic trials focusing on alzheimer's disease"
-    # prompt = "does Rapamycin reduce Alzheimer"
-    # prompt = "what is the best drug to reduce hyper-tension for people with diabetes"
+
     prompt = "does childbirth reduce chance of breast cancer"
-    # prompt = "does magnesium reduce high blood pressure"
-    # prompt = "Has the average cohort size in clinical trials targeting Parkinson's increased or decreased over the past 10 years?"
 
     # The symphony is composed of two movements
     #  * The first movement is to extract the drug and effect from the prompt then list all
@@ -29,12 +23,13 @@ def main() -> None:
     
     m_extract = Movement(
         prompt_classifier=[BiomedicalNerAllTokenClassifier()],
-        performers=[NLMExtractor(max_rnk=15)]
+        performers=[NLMExtractor(max_rnk=10)]
     )
 
     m_list_and_conclude = Movement(
-        prompt_str="First, list all the publications by PMID and a summary. " +
-                   "Then based on all the publications, generate a conclusion for '" + prompt + "' : {} ",
+        prompt_str="Generate an article with a title based on '" +
+                    prompt + "', citing all the publications by PMID and a summary. " +
+                   "Then generate a conclusion for the publications: {} ",
         performers=[Gpt4()]
     )
 

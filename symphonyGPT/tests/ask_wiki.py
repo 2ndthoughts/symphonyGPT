@@ -11,11 +11,7 @@ from symphonyGPT.symphony.symphony import Symphony
 # symphonyGPT/performers/api_keys.py
 
 def main() -> None:
-    #prompt = "what are ancient food from India"
-    #cprompt = "how did the roman empire fall"
-    # prompt = "how did the mongolian empire fall"
-    #prompt = "what are ancient food from China"
-    #prompt = "what is the history of xiaolongbao"
+    # prompt = "how did the roman empire fall"
 
     # The symphony is composed of two movements
     #  * list all the studies from arxiv based on a search of the prompt
@@ -35,7 +31,8 @@ def main() -> None:
     )
 
     m_extract = Movement(
-        prompt_str="{}",
+        prompt_str="breaking waves"
+        ,
         performers=[WikipediaExtractor(max_results=10)]
     )
 
@@ -52,8 +49,7 @@ def main() -> None:
     )
 
     print(prompt)
-    symphony = Symphony(movements=[m_generate_context, m_summarize_generated_prompt,
-                                   m_extract,m_generate_article, m_create_pdf],
+    symphony = Symphony(movements=[m_extract,m_generate_article, m_create_pdf],
                         null_answer_break=True)
     res = symphony.perform(prompt)
 
