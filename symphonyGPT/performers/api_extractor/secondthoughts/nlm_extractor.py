@@ -5,6 +5,7 @@ from symphonyGPT.performers.api_extractor.api_extractor import APIExtractor
 from symphonyGPT.symphony.classifier.huggingface.ade_drug_effect_token_classifier import AdeDrugEffectTokenClassifier
 from symphonyGPT.symphony.movement import Movement
 from symphonyGPT.symphony.symphony import Symphony
+from symphonyGPT.symphony import summarizer
 
 
 # :copyright: Copyright 2023 by 2ndthoughts.ai david@2ndthoughts.ai.
@@ -98,7 +99,7 @@ class NLMExtractor(APIExtractor):
                     if xml.find('PubmedArticle/MedlineCitation/Article/Abstract/AbstractText') is not None:
                         abstract_text = xml.find('PubmedArticle/MedlineCitation/Article/Abstract/AbstractText').text
 
-                    summarized_text = self.summarize_result(abstract_text, prompt.get_prompt())
+                    summarized_text = summarizer.summarize_result(abstract_text, prompt.get_prompt())
 
                     authors = ""
                     for author in xml.findall('PubmedArticle/MedlineCitation/Article/AuthorList/Author'):
