@@ -105,6 +105,7 @@ class CourtListenerExtractor(APIExtractor):
                             str_to_summarize = opinion_data['plain_text']
 
                     prompt_str = f"According to the allegation '{p_str}', summarize the following court case '{str_to_summarize[:7000]}'"  # make sure we dont overwhelm max tokens
+                    self.util.debug_print(f"CourtListenerExtractor.perform() summarizing: {case['caseName']}")
                     summarize_this_str = summarizer.summarize_result_in_chunks(str_to_summarize, p_str, prompt_str)
 
                     json_answer_set["caseSummary"] = summarize_this_str
