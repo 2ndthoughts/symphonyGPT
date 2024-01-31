@@ -1,5 +1,7 @@
 import io
+import random
 import re
+import string
 import sys
 import chromadb
 import demjson3
@@ -115,3 +117,7 @@ class Util:
 
         # Return the content of the buffer
         return buffer.getvalue()
+
+    def random_string(self, length):
+        letters = string.ascii_lowercase
+        return ''.join(random.choice(letters) for i in range(length))

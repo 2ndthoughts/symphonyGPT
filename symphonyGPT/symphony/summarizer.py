@@ -11,7 +11,8 @@ os.environ["TOKENIZERS_PARALLELISM"] = "true"  # to avoid dead lock warning
 def summarize_result_in_chunks(summarize_this_str, summarizing_prompt, prompt_str=None):
     util = Util()
     db_client = chromadb.Client()
-    collection = db_client.get_or_create_collection(name="summarizer")
+    summarizer_name = f"summarizer_{util.random_string(5)}"
+    collection = db_client.get_or_create_collection(name=f"{summarizer_name}")
     default_embedding_function = embedding_functions.DefaultEmbeddingFunction()
     maximum_embedded_summarized_text = 8000
     maximum_embedded_docs = 100
@@ -48,7 +49,7 @@ def summarize_result_in_chunks(summarize_this_str, summarizing_prompt, prompt_st
                 if len(embedded_summarized_text) > maximum_embedded_summarized_text:
                     break
 
-    db_client.delete_collection(name="summarizer")
+    db_client.delete_collection(name=f"{summarizer_name}")
     util.debug_print(
         f"summarize_result_in_chunks() embedded_summarized_text num/len: {number_of_documents}/{len(embedded_summarized_text)}")
     return embedded_summarized_text
