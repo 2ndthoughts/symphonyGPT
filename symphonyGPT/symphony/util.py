@@ -121,3 +121,14 @@ class Util:
     def random_string(self, length):
         letters = string.ascii_lowercase
         return ''.join(random.choice(letters) for i in range(length))
+
+
+def parse_mysql_connection_string(conn_str):
+    pattern = re.compile(
+        r'mysql://(?P<user>[^:]+):(?P<password>[^@]+)@(?P<host>[^:]+):(?P<port>[^/]+)/(?P<database>.+)'
+    )
+    match = pattern.match(conn_str)
+    if match:
+        return match.groupdict()
+    else:
+        raise ValueError("Invalid MySQL connection string")
