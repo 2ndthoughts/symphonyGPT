@@ -20,9 +20,8 @@ class MySQLQueryRunner(Generator):
 
         text = self.util.extract_answer(prompt.get_prompt())
         sql = self.util.extract_between(text, "```sql", "```")
-        self.util.debug_print(f"sql: {sql}")
 
-        answer = ""
+        self.util.debug_print(f"extracted sql:\n{sql}")
 
         # Connect to the MySQL Database
         conn = None
@@ -41,8 +40,16 @@ class MySQLQueryRunner(Generator):
 
             cursor.execute(sql)
 
+            # Retrieve column headers
+            column_headers = [i[0] for i in cursor.description]
+
             # Fetch all the rows
-            results = cursor.fetchall()
+            rows = cursor.fetchall()
+
+            results = []
+            for row in rows:
+                row_dict = dict(zip(column_headers, row))
+                results.append(row_dict)
 
             answer = '\n'.join([str(row) for row in results])
 
