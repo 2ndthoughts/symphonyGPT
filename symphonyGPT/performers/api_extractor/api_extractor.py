@@ -13,6 +13,16 @@ class APIExtractor(Performer):
         self.default_embedding_function = embedding_functions.DefaultEmbeddingFunction()
         self.max_embeddings_results = max_embeddings_results
 
+    def create_query_array_from_classifier(self, classifications):
+        query_array = []
+        if classifications is not None:
+            # use classification words to search for drug and effect
+            for classification_name, classification in classifications.items():
+                for entity in classification:
+                    query_array.append(entity["word"].strip())
+
+        return query_array
+
     def create_query_str_from_classifier(self, classifications):
         query_str = ""
         if classifications is not None:
