@@ -38,7 +38,8 @@ class PromptContextGenerator(Generator):
         for question in questions_array:
             question = question.strip()
             if len(question) > 0:
-                user_input = input(f"{question}: ")
+                print(f"{question}: ")
+                user_input = input("")
                 context = f"{question}: {user_input}"
                 # self.util.debug_print(f"question: {context}")
                 questions_array[q_count] = context
