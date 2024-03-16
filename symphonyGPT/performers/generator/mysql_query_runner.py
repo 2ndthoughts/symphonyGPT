@@ -73,16 +73,16 @@ class MySQLQueryRunner(Generator):
 if __name__ == "__main__":
     with open(
             "../../../../../Library/Application "
-            "Support/JetBrains/PyCharmCE2023.2/scratches/sandbox/test_python_code_runner.txt", 'r') as file:
+            "Support/JetBrains/PyCharmCE2023.3/scratches/sandbox/test_mysql_query_runner.txt", 'r') as file:
         content = file.read()
 
     prompt = content
 
     m_test = Movement(
-        performers=[PythonCodeRunner()]
+        performers=[MySQLQueryRunner()]
     )
 
-    if "```python" in prompt:
+    if "```sql" in prompt:
         run = input("Code detected, would you like to run the code? (y/n): ")
         if run == "y":
             symphony = Symphony(movements=[m_test], null_answer_break=True)
