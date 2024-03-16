@@ -7,7 +7,8 @@ from symphonyGPT.symphony.symphony import Symphony
 
 
 def main() -> None:
-    prompt = input("How can I help you: ")
+    print("How can I help you: ")
+    prompt = input("")
     # prompt = "Tell me a short story about a dog"
     # prompt = "write a client web service code to query arxiv for information regarding superconductors"
     # prompt = "write code that can calculate pi to the 20th decimal place"
@@ -15,7 +16,7 @@ def main() -> None:
     # prompt = "write code to scrape the website 'https://2ndthoughts.ai/' for details of the platform"
 
     m_generate_context = Movement(
-        performers=[PromptContextGenerator(number_of_questions=4)]
+        performers=[PromptContextGenerator(number_of_questions=3)]
     )
 
     m_respond = Movement(
@@ -37,14 +38,16 @@ def main() -> None:
 
     # detect code in answer and offer to run it
     if "```python" in res[0]["answer"] or "```Python" in res[0]["answer"]:
-        run = input("Code detected, would you like to run the code? (y/n): ")
+        print("Code detected, would you like to run the code? (y/n): ")
+        run = input("")
         if run == "y":
             symphony = Symphony(movements=[m_run_python], null_answer_break=True)
             res = symphony.perform(res[0]["answer"])
         else:
             print("Code not run")
 
-    pdf = input("Would you like a PDF of the response? (y/n): ")
+    print("Would you like a PDF of the response? (y/n): ")
+    pdf = input("")
     if pdf == "y":
         symphony = Symphony(movements=[m_generate_pdf],
                             null_answer_break=False)

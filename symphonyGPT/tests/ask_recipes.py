@@ -16,7 +16,7 @@ from symphonyGPT.symphony.symphony import Symphony
 # symphonyGPT/performers/api_keys.py
 
 def main() -> None:
-    prompt = "what are some recipes that contain mushrooms"
+    prompt = "what are some recipes for coffee"
 
     # The symphony is composed of two movements
     #  * list all the studies from arxiv based on a search of the prompt
@@ -30,7 +30,7 @@ def main() -> None:
     )
 
     m_list_and_conclude = Movement(
-        prompt_str="Summarize the following recipes by the following question'" + prompt + "' : {} ",
+        prompt_str="Generate an article using the following recipes by the following question'" + prompt + "' : {} ",
         performers=[Gpt4()]
     )
 

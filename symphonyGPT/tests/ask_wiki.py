@@ -11,7 +11,7 @@ from symphonyGPT.symphony.symphony import Symphony
 # symphonyGPT/performers/api_keys.py
 
 def main() -> None:
-    # prompt = "how did the roman empire fall"
+    prompt = "how did the roman empire fall"
 
     # The symphony is composed of two movements
     #  * list all the studies from arxiv based on a search of the prompt
@@ -19,7 +19,7 @@ def main() -> None:
     #  * The second movement is to generate a conclusion based on the extracted statements
     #  * and the list of studies from eutils.ncbi.nlm.nih.gov (National Library of Medicine)
 
-    prompt = input("What would you like to know: ")
+    #prompt = input("What would you like to know: ")
 
     m_generate_context = Movement(
         performers=[PromptContextGenerator(number_of_questions=3)]
@@ -31,8 +31,6 @@ def main() -> None:
     )
 
     m_extract = Movement(
-        prompt_str="breaking waves"
-        ,
         performers=[WikipediaExtractor(max_results=10)]
     )
 
