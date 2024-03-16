@@ -11,8 +11,10 @@ import xml.etree.ElementTree as ET
 
 
 class Util:
+    debug = False
+
     def __init__(self):
-        self.debug = True
+        pass
 
     def _message_print(self, message, color):
         print(color + message + Fore.RESET)
@@ -23,11 +25,11 @@ class Util:
         raise TypeError("Type not serializable")
 
     def debug_print(self, message):
-        if self.debug:
+        if Util.debug:
             self._message_print(message, Fore.GREEN)
 
     def debug_print_line(self):
-        if self.debug:
+        if Util.debug:
             self._message_print("--------------------------------------------------", Fore.GREEN)
 
     def error_print(self, message):
@@ -50,6 +52,23 @@ class Util:
         for collection in db_client.list_collections():
             self.print(f"{collection.name}: {collection.count()}")
         self.print_line()
+
+    def print_boxed_text(self, text):
+        # Determine the length of the longest line
+        max_length = max(len(line) for line in text.split('\n'))
+
+        # Create the top border
+        top_border = '+' + '-' * (max_length + 2) + '+'
+
+        # Print the top border
+        print(top_border)
+
+        # Print each line of text within borders
+        for line in text.split('\n'):
+            print('| ' + line.ljust(max_length) + ' |')
+
+        # Print the bottom border
+        print(top_border)
 
     def get_collection(self, name):
         db_client = chromadb.Client()
