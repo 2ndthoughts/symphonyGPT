@@ -3,12 +3,14 @@ from symphonyGPT.performers.api_keys import APIKeys
 from symphonyGPT.performers.generator.generator import Generator
 from symphonyGPT.symphony.movement import Movement
 from symphonyGPT.symphony.symphony import Symphony
+from symphonyGPT.symphony.symphony_cache import SymphonyCache
 from symphonyGPT.symphony.util import parse_mysql_connection_string
 
 
 class MySQLQueryRunner(Generator):
     def __init__(self):
         super().__init__()
+        self.cache = SymphonyCache("/tmp/symphonyGPT_cache")
         self.set_type("mysql_query_runner")
         # mysql://root:password123@localhost:3306/mydatabase
         self.conn_str = APIKeys().get_api_key("mysql_connection_string")
@@ -22,6 +24,9 @@ class MySQLQueryRunner(Generator):
         sql = self.util.extract_between(text, "```sql", "```")
 
         self.util.debug_print(f"extracted sql:\n{sql}")
+
+        self.cache.set("MySQLQueryRunner.sql", sql)
+        self.cache.set("MySQLQueryRunner.error", "None") # clear any previous error
 
         # Connect to the MySQL Database
         conn = None
@@ -52,7 +57,10 @@ class MySQLQueryRunner(Generator):
                 results.append(row_dict)
 
             answer = '\n'.join([str(row) for row in results])
-
+            self.cache.set("MySQLQueryRunner.result", answer)
+        except mysql.connector.Error as e:
+            answer = f"Error: {e}"
+            self.cache.set("MySQLQueryRunner.error", f"Error: {e}")
         finally:
             if conn.is_connected():
                 conn.close()

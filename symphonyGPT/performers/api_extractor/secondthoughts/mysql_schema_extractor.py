@@ -3,6 +3,7 @@ from symphonyGPT.performers.api_extractor.api_extractor import APIExtractor
 from symphonyGPT.performers.api_keys import APIKeys
 from symphonyGPT.symphony.movement import Movement
 from symphonyGPT.symphony.symphony import Symphony
+from symphonyGPT.symphony.symphony_cache import SymphonyCache
 from symphonyGPT.symphony.util import parse_mysql_connection_string
 
 
@@ -14,6 +15,7 @@ class MySQLSchemaExtractor(APIExtractor):
         # Parse the connection string
         self.mysql_params = parse_mysql_connection_string(self.conn_str)
         self.table_name = table_name
+        self.cache = SymphonyCache("/tmp/symphonyGPT_cache")
 
     def perform(self, prompt):
         # ignore prompt, not used
@@ -30,6 +32,12 @@ class MySQLSchemaExtractor(APIExtractor):
                 database=self.mysql_params['database'],
                 port=self.mysql_params['port']
             )
+
+            self.cache.set("MySQLSchemaExtractor.database", self.mysql_params['database'])
+            self.cache.set("MySQLSchemaExtractor.host", self.mysql_params['host'])
+            self.cache.set("MySQLSchemaExtractor.port", self.mysql_params['port'])
+            self.cache.set("MySQLSchemaExtractor.user", self.mysql_params['user'])
+
             self.util.debug_print(
                 f"Connected to the database {self.mysql_params['database']} on {self.mysql_params['host']} as {self.mysql_params['user']}")
             # Create a cursor object
@@ -54,6 +62,8 @@ class MySQLSchemaExtractor(APIExtractor):
 
             for row in rows:
                 answer += row[1]
+
+            self.cache.set("MySQLSchemaExtractor.schema", answer)
         finally:
             if conn.is_connected():
                 conn.close()
