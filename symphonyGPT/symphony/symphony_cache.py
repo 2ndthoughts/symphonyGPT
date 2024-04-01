@@ -19,6 +19,41 @@ class SymphonyCache:
         # Register the cleanup function to run on process exit
         atexit.register(self.cleanup_cache_dir)
 
+    def delete_old_cache_dirs(self):
+        import os
+        import shutil
+        import time
+
+        # Define the directory where the folders are located
+        directory_path = '/tmp'
+
+        # Define the prefix of the folders you want to delete
+        folder_prefix = 'symphonyGPT_cache'
+
+        # Define the age limit (in seconds)
+        age_limit_seconds = 1 * 24 * 60 * 60  # 1 day in seconds
+
+        # Get the current time in seconds since the epoch
+        current_time = time.time()
+
+        # List all the items in the directory
+        for item in os.listdir(directory_path):
+            item_path = os.path.join(directory_path, item)
+
+            # Check if the item is a directory
+            if os.path.isdir(item_path) and item.startswith(folder_prefix):
+                # Get the creation time of the folder
+                creation_time = os.path.getctime(item_path)
+
+                # Calculate the age of the folder
+                folder_age = current_time - creation_time
+
+                # Check if the folder is older than the age limit
+                if folder_age > age_limit_seconds:
+                    # Delete the folder if it's older than 1 day
+                    shutil.rmtree(item_path)
+                    Util().debug_print(f"delete_old_cache_dirs deleted: {item_path}")
+
     # Function to cleanup the cache directory
     def cleanup_cache_dir(self):
         if os.path.exists(self.cache_dir):
