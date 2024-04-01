@@ -49,7 +49,7 @@ class MySQLQueryRunner(Generator):
                 port=self.mysql_params['port']
             )
             self.util.debug_print(
-                f"Connected to the database {self.mysql_params['database']} on {self.mysql_params['host']} as {self.mysql_params['user']}")
+                f"Connected to the database {database_name} on {self.mysql_params['host']} as {self.mysql_params['user']}")
             # Create a cursor object
             cursor = conn.cursor()
 

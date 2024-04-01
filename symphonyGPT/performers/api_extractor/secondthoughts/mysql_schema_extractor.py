@@ -43,13 +43,13 @@ class MySQLSchemaExtractor(APIExtractor):
                 port=self.mysql_params['port']
             )
 
-            self.cache.set("MySQLSchemaExtractor.database", self.mysql_params['database'])
+            self.cache.set("MySQLSchemaExtractor.database", database_name)
             self.cache.set("MySQLSchemaExtractor.host", self.mysql_params['host'])
             self.cache.set("MySQLSchemaExtractor.port", self.mysql_params['port'])
             self.cache.set("MySQLSchemaExtractor.user", self.mysql_params['user'])
 
             self.util.debug_print(
-                f"Connected to the database {self.mysql_params['database']} on {self.mysql_params['host']} as {self.mysql_params['user']}")
+                f"Connected to the database {database_name} on {self.mysql_params['host']} as {self.mysql_params['user']}")
             # Create a cursor object
             cursor = conn.cursor()
 
