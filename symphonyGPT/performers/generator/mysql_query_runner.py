@@ -8,14 +8,22 @@ from symphonyGPT.symphony.util import parse_mysql_connection_string
 
 
 class MySQLQueryRunner(Generator):
-    def __init__(self):
+    def __init__(self, database="use_connection_string"):
         super().__init__()
         self.cache = SymphonyCache("/tmp/symphonyGPT_cache")
         self.set_type("mysql_query_runner")
-        # mysql://root:password123@localhost:3306/mydatabase
         self.conn_str = APIKeys().get_api_key("mysql_connection_string")
         # Parse the connection string
         self.mysql_params = parse_mysql_connection_string(self.conn_str)
+        self.database = database
+
+
+    def get_database_name(self):
+        database_name = self.mysql_params['database']
+        if self.database != "use_connection_string":
+            database_name = self.database
+
+        return database_name
 
     def perform(self, prompt):
         self.util.debug_print("MySQLQueryRunner.perform() called")
@@ -31,11 +39,13 @@ class MySQLQueryRunner(Generator):
         # Connect to the MySQL Database
         conn = None
         try:
+            database_name = self.get_database_name()
+
             conn = mysql.connector.connect(
                 host=self.mysql_params['host'],
                 user=self.mysql_params['user'],
                 password=self.mysql_params['password'],
-                database=self.mysql_params['database'],
+                database=database_name,
                 port=self.mysql_params['port']
             )
             self.util.debug_print(
