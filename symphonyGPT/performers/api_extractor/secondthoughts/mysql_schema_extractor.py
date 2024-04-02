@@ -1,3 +1,5 @@
+import sys
+
 import mysql.connector
 from symphonyGPT.performers.api_extractor.api_extractor import APIExtractor
 from symphonyGPT.performers.api_keys import APIKeys
@@ -33,15 +35,23 @@ class MySQLSchemaExtractor(APIExtractor):
         # Connect to the MySQL Database
         conn = None
         try:
+            # reset the cache for errors
+            self.cache.delete("MySQLSchemaExtractor.error")
             database_name = self.get_database_name()
 
-            conn = mysql.connector.connect(
-                host=self.mysql_params['host'],
-                user=self.mysql_params['user'],
-                password=self.mysql_params['password'],
-                database=database_name,
-                port=self.mysql_params['port']
-            )
+            try:
+                conn = mysql.connector.connect(
+                    host=self.mysql_params['host'],
+                    user=self.mysql_params['user'],
+                    password=self.mysql_params['password'],
+                    database=database_name,
+                    port=self.mysql_params['port']
+                )
+            except Exception as e:
+                error_str = f"Failed to connect to the database: {database_name}, error: {e}"
+                print(error_str, file=sys.stderr)
+                self.cache.set("MySQLSchemaExtractor.error", error_str)
+                return
 
             self.cache.set("MySQLSchemaExtractor.database", database_name)
             self.cache.set("MySQLSchemaExtractor.host", self.mysql_params['host'])
@@ -75,7 +85,7 @@ class MySQLSchemaExtractor(APIExtractor):
 
             self.cache.set("MySQLSchemaExtractor.schema", answer)
         finally:
-            if conn.is_connected():
+            if conn is not None and conn.is_connected():
                 conn.close()
                 self.util.debug_print("Connection closed")
 
