@@ -30,6 +30,8 @@ class MySQLQueryRunner(Generator):
 
         text = self.util.extract_answer(prompt.get_prompt())
         sql = self.util.extract_between(text, "```sql", "```")
+        if sql is None:
+            sql = text
 
         self.util.debug_print(f"extracted sql:\n{sql}")
 
