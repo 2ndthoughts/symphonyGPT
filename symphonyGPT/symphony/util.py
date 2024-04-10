@@ -150,4 +150,12 @@ def parse_mysql_connection_string(conn_str):
     if match:
         return match.groupdict()
     else:
-        raise ValueError("Invalid MySQL connection string")
+        # if partial match, return partial dict, database name is optional
+        pattern = re.compile(
+            r'mysql://(?P<user>[^:]+):(?P<password>[^@]+)@(?P<host>[^:]+):(?P<port>[^/]+)'
+        )
+        match = pattern.match(conn_str)
+        if match:
+            return match.groupdict()
+        else:
+            raise ValueError("Invalid MySQL connection string")
