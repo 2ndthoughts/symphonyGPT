@@ -3,10 +3,10 @@ import sys
 import mysql.connector
 from symphonyGPT.performers.api_extractor.api_extractor import APIExtractor
 from symphonyGPT.performers.api_keys import APIKeys
+from symphonyGPT.symphony.db_util import parse_mysql_connection_string, get_database_name
 from symphonyGPT.symphony.movement import Movement
 from symphonyGPT.symphony.symphony import Symphony
 from symphonyGPT.symphony.symphony_cache import SymphonyCache
-from symphonyGPT.symphony.util import parse_mysql_connection_string
 
 
 class MySQLSchemaExtractor(APIExtractor):
@@ -20,12 +20,6 @@ class MySQLSchemaExtractor(APIExtractor):
         self.table_name = table_name
         self.cache = SymphonyCache("/tmp/symphonyGPT_cache")
 
-    def get_database_name(self):
-        database_name = self.mysql_params['database']
-        if self.database != "use_connection_string":
-            database_name = self.database
-
-        return database_name
 
     def perform(self, prompt):
         # ignore prompt, not used
@@ -37,7 +31,7 @@ class MySQLSchemaExtractor(APIExtractor):
         try:
             # reset the cache for errors
             self.cache.delete("MySQLSchemaExtractor.error")
-            database_name = self.get_database_name()
+            database_name = get_database_name(self.mysql_params, self.database)
 
             try:
                 conn = mysql.connector.connect(
@@ -59,7 +53,7 @@ class MySQLSchemaExtractor(APIExtractor):
             self.cache.set("MySQLSchemaExtractor.user", self.mysql_params['user'])
 
             self.util.debug_print(
-                f"Connected to the database {database_name} on {self.mysql_params['host']} as {self.mysql_params['user']}")
+                f"Connected to the database '{database_name}' on {self.mysql_params['host']} as {self.mysql_params['user']}")
             # Create a cursor object
             cursor = conn.cursor()
 
@@ -68,14 +62,14 @@ class MySQLSchemaExtractor(APIExtractor):
                 cursor.execute(f"SHOW TABLES")
                 rows = cursor.fetchall()
                 for row in rows:
-                    cursor.execute(f"SHOW CREATE TABLE {row[0]}")
+                    cursor.execute(f"SHOW CREATE TABLE `{row[0]}`")
                     create_table_rows = cursor.fetchall()
                     for create_table_row in create_table_rows:
                         answer += create_table_row[1]
 
                     answer += "\n\n"
             else:
-                cursor.execute(f"SHOW CREATE TABLE {self.table_name}")
+                cursor.execute(f"SHOW CREATE TABLE `{self.table_name}`")
 
             # Fetch all the rows
             rows = cursor.fetchall()

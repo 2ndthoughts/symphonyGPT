@@ -1,10 +1,13 @@
 import mysql.connector
+import pandas as pd
+from sqlalchemy import create_engine, text
+
 from symphonyGPT.performers.api_keys import APIKeys
 from symphonyGPT.performers.generator.generator import Generator
+from symphonyGPT.symphony.db_util import parse_mysql_connection_string, get_database_name
 from symphonyGPT.symphony.movement import Movement
 from symphonyGPT.symphony.symphony import Symphony
 from symphonyGPT.symphony.symphony_cache import SymphonyCache
-from symphonyGPT.symphony.util import parse_mysql_connection_string
 
 
 class MySQLQueryRunner(Generator):
@@ -17,21 +20,38 @@ class MySQLQueryRunner(Generator):
         self.mysql_params = parse_mysql_connection_string(self.conn_str)
         self.database = database
 
+    def load_csv_to_db(self, csv_file, dataset_name):
+        # Replace these with your connection details
+        username = self.mysql_params['user']
+        password = self.mysql_params['password']
+        host = self.mysql_params['host']
 
-    def get_database_name(self):
-        database_name = self.mysql_params['database']
-        if self.database != "use_connection_string":
-            database_name = self.database
+        # use dataset_name as database name, if it doesnt exist, create the database using the dataset name
+        # print(f"Creating dataset '{dataset_name}'")
+        engine = create_engine(f'mysql+mysqlconnector://{username}:{password}@{host}/')
+        with engine.connect() as connection:
+            sql = text(f"CREATE DATABASE IF NOT EXISTS `{dataset_name}`")
+            connection.execute(sql)
+        engine.dispose()
 
-        return database_name
+        # Specify the sheet name or its index as sheet_name parameter
+        df = pd.read_csv(csv_file, header=0, index_col=False, encoding='utf-8', low_memory=False)
+
+        # SQLAlchemy engine for MySQL connection
+        engine = create_engine(f'mysql+mysqlconnector://{username}:{password}@{host}/{dataset_name}')
+
+        # Load data into MySQL - replace 'your_table_name' with your actual table name
+        # The 'if_exists' parameter defines what to do if the table already exists:
+        # 'replace', 'append', or 'fail'
+        df.to_sql(dataset_name, con=engine, index=False, if_exists='append')
 
     def perform(self, prompt):
         self.util.debug_print("MySQLQueryRunner.perform() called")
 
-        text = self.util.extract_answer(prompt.get_prompt())
-        sql = self.util.extract_between(text, "```sql", "```")
+        sql_text = self.util.extract_answer(prompt.get_prompt())
+        sql = self.util.extract_between(sql_text, "```sql", "```")
         if sql is None:
-            sql = text
+            sql = sql_text
 
         self.util.debug_print(f"extracted sql:\n{sql}")
 
@@ -41,7 +61,7 @@ class MySQLQueryRunner(Generator):
         # Connect to the MySQL Database
         conn = None
         try:
-            database_name = self.get_database_name()
+            database_name = get_database_name(self.mysql_params, self.database)
 
             conn = mysql.connector.connect(
                 host=self.mysql_params['host'],
@@ -51,7 +71,7 @@ class MySQLQueryRunner(Generator):
                 port=self.mysql_params['port']
             )
             self.util.debug_print(
-                f"Connected to the database {database_name} on {self.mysql_params['host']} as {self.mysql_params['user']}")
+                f"Connected to the database '{database_name}' on {self.mysql_params['host']} as {self.mysql_params['user']}")
             # Create a cursor object
             cursor = conn.cursor()
 
