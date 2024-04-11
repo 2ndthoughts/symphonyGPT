@@ -61,7 +61,10 @@ class Movement:
                 futures = {executor.submit(self.worker, performer, current_response): performer for performer in
                            self.performers}
                 for future in concurrent.futures.as_completed(futures):
-                    future.result()  # here result is the return value of update_meta_data_by_outcome_strategy
+                    try:
+                        future.result()  # here result is the return value of update_meta_data_by_outcome_strategy
+                    except Exception as exc:
+                        self.util.debug_print(f"Movement.perform() exception: {exc}")
         else:
             for performer in self.performers:
                 self.util.debug_print(
