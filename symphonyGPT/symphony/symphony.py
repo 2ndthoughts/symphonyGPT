@@ -53,7 +53,9 @@ class Symphony:
                                            movement_output[0]["answer"] == "{}" or
                                            movement_output[0]["answer"] is None):
                 self.util.debug_print("Symphony.perform() null answer break, there is no answer")
-                movement_output[0]["answer"] = "There is no answer"
+
+                # if the movement returns a null answer, break
+                movement_output = [{"answer": "There is no answer"}]
                 break
 
         self.end_time = timeit.default_timer()
