@@ -1,6 +1,7 @@
 import mysql.connector
 import pandas as pd
 from sqlalchemy import create_engine, text
+import sqlparse
 
 from symphonyGPT.performers.api_keys import APIKeys
 from symphonyGPT.performers.generator.generator import Generator
@@ -20,7 +21,55 @@ class MySQLQueryRunner(Generator):
         self.mysql_params = parse_mysql_connection_string(self.conn_str)
         self.database = database
 
-    def load_csv_to_db(self, csv_file, dataset_name):
+    def load_mysql_dump(self, dump_file, dataset_name):
+        # Replace these with your connection details
+        username = self.mysql_params['user']
+        password = self.mysql_params['password']
+        host = self.mysql_params['host']
+
+        db = mysql.connector.connect(
+            host=host,
+            user=username,
+            password=password
+        )
+
+        # Creating a cursor object using the cursor() method
+        cursor = db.cursor()
+
+        # Executing an SQL command
+        cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{dataset_name}`")
+        cursor.execute(f"USE `{dataset_name}`")
+        db.commit()
+
+        # Open the dump file
+        with open(dump_file, 'r', encoding='utf-8') as file:
+            # Read the entire file in one go
+            sql_file = file.read()
+
+            # Split the file into separate statements
+            sql_commands = sqlparse.split(sql_file)
+
+            # Cursor to execute all SQL commands
+            cursor = db.cursor()
+
+            try:
+                for command in sql_commands:
+                    # Check if the command is not just whitespace
+                    if command.strip():
+                        cursor.execute(command)
+
+                db.commit()  # Commit the transaction
+                #print("MySQL Dump file has been loaded successfully.")
+            except mysql.connector.Error as err:
+                db.rollback()  # Rollback in case of error
+                print(f"Failed executing command: {err}")
+            finally:
+                cursor.close()
+
+        # Close the database connection
+        db.close()
+
+    def load_csv(self, csv_file, dataset_name):
         # Replace these with your connection details
         username = self.mysql_params['user']
         password = self.mysql_params['password']
@@ -74,7 +123,8 @@ class MySQLQueryRunner(Generator):
                 f"Connected to the database '{database_name}' on {self.mysql_params['host']} as {self.mysql_params['user']}")
             # Create a cursor object
             cursor = conn.cursor()
-
+            # remove ONLY_FULL_GROUP_BY from sql_mode for this session
+            cursor.execute("SET SESSION sql_mode = REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY', '');")
             cursor.execute(sql)
 
             # Retrieve column headers
