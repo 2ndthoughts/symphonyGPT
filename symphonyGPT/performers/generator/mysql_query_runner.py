@@ -21,6 +21,50 @@ class MySQLQueryRunner(Generator):
         self.mysql_params = parse_mysql_connection_string(self.conn_str)
         self.database = database
 
+    def load_excel(self, excel_file, dataset_name):
+        # Replace these with your connection details
+        username = self.mysql_params['user']
+        password = self.mysql_params['password']
+        host = self.mysql_params['host']
+
+        # use dataset_name as database name, if it doesnt exist, create the database using the dataset name
+        # print(f"Creating dataset '{dataset_name}'")
+        engine = create_engine(f'mysql+mysqlconnector://{username}:{password}@{host}/')
+        with engine.connect() as connection:
+            sql = text(f"CREATE DATABASE IF NOT EXISTS `{dataset_name}`")
+            connection.execute(sql)
+        engine.dispose()
+
+        # SQLAlchemy engine for MySQL connection
+        engine = create_engine(f'mysql+mysqlconnector://{username}:{password}@{host}/{dataset_name}')
+
+        # Read the Excel file
+        xls = pd.ExcelFile(excel_file)
+
+        # Process each sheet
+        for sheet_name in xls.sheet_names:
+            # Load sheet into DataFrame without headers to evaluate all rows
+            df = pd.read_excel(xls, sheet_name=sheet_name, header=None)
+
+            print(f"\nProcessing sheet: {sheet_name}")
+
+            # Detect the header row: the first row that spans the most columns that contain a value
+            max_count = df.apply(lambda x: x.last_valid_index(), axis=1).max()
+            header_candidates = df.apply(lambda x: x.last_valid_index(), axis=1)
+            header_row = header_candidates[header_candidates == max_count].index[0]
+
+            # Re-load the sheet using the detected header row
+            df = pd.read_excel(xls, sheet_name=sheet_name, header=header_row)
+
+            # Filter columns to include only those that have at least some data
+            non_empty_columns = df.columns[df.notna().any()].tolist()
+            df = df[non_empty_columns]
+
+            # print(df.head())
+
+            # Write to MySQL, using sheet name as table name
+            df.to_sql(name=sheet_name, con=engine, if_exists='replace', index=False)
+
     def load_mysql_dump(self, dump_file, dataset_name):
         # Replace these with your connection details
         username = self.mysql_params['user']
