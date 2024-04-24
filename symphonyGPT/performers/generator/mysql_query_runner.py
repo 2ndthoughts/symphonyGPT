@@ -20,6 +20,7 @@ class MySQLQueryRunner(Generator):
         # Parse the connection string
         self.mysql_params = parse_mysql_connection_string(self.conn_str)
         self.database = database
+        self.max_allowed_packet = 1073741824
 
     def load_excel(self, excel_file, dataset_name):
         # Replace these with your connection details
@@ -32,6 +33,8 @@ class MySQLQueryRunner(Generator):
         engine = create_engine(f'mysql+mysqlconnector://{username}:{password}@{host}/')
         with engine.connect() as connection:
             sql = text(f"CREATE DATABASE IF NOT EXISTS `{dataset_name}`")
+            connection.execute(sql)
+            sql = text(f"SET GLOBAL max_allowed_packet={self.max_allowed_packet};")
             connection.execute(sql)
         engine.dispose()
 
@@ -81,6 +84,7 @@ class MySQLQueryRunner(Generator):
         cursor = db.cursor()
 
         # Executing an SQL command
+        cursor.execute(f"SET GLOBAL max_allowed_packet={self.max_allowed_packet};")
         cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{dataset_name}`")
         cursor.execute(f"USE `{dataset_name}`")
         db.commit()
@@ -124,6 +128,8 @@ class MySQLQueryRunner(Generator):
         engine = create_engine(f'mysql+mysqlconnector://{username}:{password}@{host}/')
         with engine.connect() as connection:
             sql = text(f"CREATE DATABASE IF NOT EXISTS `{dataset_name}`")
+            connection.execute(sql)
+            sql = text(f"SET GLOBAL max_allowed_packet={self.max_allowed_packet};")
             connection.execute(sql)
         engine.dispose()
 
