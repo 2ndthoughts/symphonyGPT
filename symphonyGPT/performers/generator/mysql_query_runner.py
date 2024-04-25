@@ -49,7 +49,7 @@ class MySQLQueryRunner(Generator):
             # Load sheet into DataFrame without headers to evaluate all rows
             df = pd.read_excel(xls, sheet_name=sheet_name, header=None)
 
-            print(f"\nProcessing sheet: {sheet_name}")
+            print(f"\nProcessing sheet: {sheet_name} ...")
 
             # Detect the header row: the first row that spans the most columns that contain a value
             max_count = df.apply(lambda x: x.last_valid_index(), axis=1).max()
