@@ -57,16 +57,19 @@ class MySQLQueryRunner(Generator):
             header_row = header_candidates[header_candidates == max_count].index[0]
 
             # Re-load the sheet using the detected header row
-            df = pd.read_excel(xls, sheet_name=sheet_name, header=header_row)
+            try:
+                df = pd.read_excel(xls, sheet_name=sheet_name, header=header_row)
 
-            # Filter columns to include only those that have at least some data
-            non_empty_columns = df.columns[df.notna().any()].tolist()
-            df = df[non_empty_columns]
+                # Filter columns to include only those that have at least some data
+                non_empty_columns = df.columns[df.notna().any()].tolist()
+                df = df[non_empty_columns]
 
-            # print(df.head())
+                # print(df.head())
 
-            # Write to MySQL, using sheet name as table name
-            df.to_sql(name=sheet_name, con=engine, if_exists='replace', index=False)
+                # Write to MySQL, using sheet name as table name
+                df.to_sql(name=sheet_name, con=engine, if_exists='replace', index=False)
+            except Exception as e:
+                print(f"Error processing sheet '{sheet_name}': {e}")
 
     def load_mysql_dump(self, dump_file, dataset_name):
         # Replace these with your connection details
