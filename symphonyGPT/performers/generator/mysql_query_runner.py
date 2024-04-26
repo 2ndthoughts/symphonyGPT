@@ -147,6 +147,20 @@ class MySQLQueryRunner(Generator):
         # 'replace', 'append', or 'fail'
         df.to_sql(dataset_name, con=engine, index=False, if_exists='append')
 
+    def drop_database(self, database_name):
+        # Replace these with your connection details
+        username = self.mysql_params['user']
+        password = self.mysql_params['password']
+        host = self.mysql_params['host']
+
+        # use dataset_name as database name, if it doesnt exist, create the database using the dataset name
+        # print(f"Dropping dataset '{dataset_name}'")
+        engine = create_engine(f'mysql+mysqlconnector://{username}:{password}@{host}/')
+        with engine.connect() as connection:
+            sql = text(f"DROP DATABASE IF EXISTS `{database_name}`")
+            connection.execute(sql)
+        engine.dispose()
+
     def perform(self, prompt):
         self.util.debug_print("MySQLQueryRunner.perform() called")
 
@@ -164,7 +178,6 @@ class MySQLQueryRunner(Generator):
         conn = None
         try:
             database_name = get_database_name(self.mysql_params, self.database)
-
             conn = mysql.connector.connect(
                 host=self.mysql_params['host'],
                 user=self.mysql_params['user'],
