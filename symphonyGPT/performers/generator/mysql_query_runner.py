@@ -136,16 +136,27 @@ class MySQLQueryRunner(Generator):
             connection.execute(sql)
         engine.dispose()
 
-        # Specify the sheet name or its index as sheet_name parameter
-        df = pd.read_csv(csv_file, header=0, index_col=False, encoding='utf-8', low_memory=False)
+        # if the CSV file is not UTF-8 encoded, specify the encoding, else loop back and try 'latin1'
+        for encoding in ['utf-8', 'latin1']:
+            try:
+                # Specify the sheet name or its index as sheet_name parameter
+                df = pd.read_csv(csv_file, header=0, index_col=False, encoding=encoding, low_memory=False)
 
-        # SQLAlchemy engine for MySQL connection
-        engine = create_engine(f'mysql+mysqlconnector://{username}:{password}@{host}/{dataset_name}')
+                # SQLAlchemy engine for MySQL connection
+                engine = create_engine(f'mysql+mysqlconnector://{username}:{password}@{host}/{dataset_name}')
 
-        # Load data into MySQL - replace 'your_table_name' with your actual table name
-        # The 'if_exists' parameter defines what to do if the table already exists:
-        # 'replace', 'append', or 'fail'
-        df.to_sql(dataset_name, con=engine, index=False, if_exists='append')
+                # Load data into MySQL - replace 'your_table_name' with your actual table name
+                # The 'if_exists' parameter defines what to do if the table already exists:
+                # 'replace', 'append', or 'fail'
+                df.to_sql(dataset_name, con=engine, index=False, if_exists='append')
+
+                break # no errors, so break out of the loop
+            except Exception as e:
+                print(f"Error loading CSV file: {e}")
+                # if the Exception contains the words "'utf-8' codec" then try 'latin1' encoding
+                if 'utf-8' in str(e):
+                    print("Trying 'latin1' encoding ...")
+                    continue
 
     def drop_database(self, database_name):
         # Replace these with your connection details
@@ -172,7 +183,7 @@ class MySQLQueryRunner(Generator):
         self.util.debug_print(f"extracted sql:\n{sql}")
 
         self.cache.set("MySQLQueryRunner.sql", sql)
-        self.cache.set("MySQLQueryRunner.error", "None") # clear any previous error
+        self.cache.set("MySQLQueryRunner.error", "None")  # clear any previous error
 
         # Connect to the MySQL Database
         conn = None
