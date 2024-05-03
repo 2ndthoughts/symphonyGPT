@@ -105,7 +105,7 @@ class MySQLQueryRunner(Generator):
 
             try:
                 for command in sql_commands:
-                    print(f"Executing command: {command}")
+                    # print(f"Executing command: {command}")
                     # Check if the command is not just whitespace
                     if command.strip():
                         cursor.execute(command)
