@@ -57,6 +57,9 @@ class SymphonyCache:
     # Function to cleanup the cache directory
     def cleanup_cache_dir(self):
         if os.path.exists(self.cache_dir):
+            # delete all files in the directory
+            self.cache.clear()
+            # delete the directory
             shutil.rmtree(self.cache_dir)
             Util().debug_print(f"Cache directory {self.cache_dir} has been deleted.")
 
