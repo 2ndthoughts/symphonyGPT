@@ -85,7 +85,6 @@ class MySQLQueryRunner(Generator):
         cursor = db.cursor()
 
         # Executing an SQL command
-        cursor.execute(f"SET GLOBAL max_allowed_packet={self.max_allowed_packet};")
         cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{dataset_name}`")
         cursor.execute(f"USE `{dataset_name}`")
         db.commit()
@@ -131,8 +130,7 @@ class MySQLQueryRunner(Generator):
         with engine.connect() as connection:
             sql = text(f"CREATE DATABASE IF NOT EXISTS `{dataset_name}`")
             connection.execute(sql)
-            sql = text(f"SET GLOBAL max_allowed_packet={self.max_allowed_packet};")
-            connection.execute(sql)
+
         engine.dispose()
 
         # if the CSV file is not UTF-8 encoded, specify the encoding, else loop back and try 'latin1'
