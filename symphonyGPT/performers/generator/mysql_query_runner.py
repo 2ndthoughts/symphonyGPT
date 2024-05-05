@@ -20,7 +20,6 @@ class MySQLQueryRunner(Generator):
         # Parse the connection string
         self.mysql_params = parse_mysql_connection_string(self.conn_str)
         self.database = database
-        self.max_allowed_packet = 1073741824
 
     def load_excel(self, excel_file, dataset_name):
         # Replace these with your connection details
@@ -34,8 +33,7 @@ class MySQLQueryRunner(Generator):
         with engine.connect() as connection:
             sql = text(f"CREATE DATABASE IF NOT EXISTS `{dataset_name}`")
             connection.execute(sql)
-            sql = text(f"SET GLOBAL max_allowed_packet={self.max_allowed_packet};")
-            connection.execute(sql)
+
         engine.dispose()
 
         # SQLAlchemy engine for MySQL connection
