@@ -7,6 +7,9 @@ from symphonyGPT.symphony.util import Util
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"  # to avoid dead lock warning
 
+maximum_embedded_summarized_text = 100000
+maximum_embedded_docs = 100
+chunk_size = 25000
 
 def summarize_result_in_chunks(summarize_this_str, summarizing_prompt, prompt_str=None):
     util = Util()
@@ -14,9 +17,7 @@ def summarize_result_in_chunks(summarize_this_str, summarizing_prompt, prompt_st
     summarizer_name = f"summarizer_{util.random_string(5)}"
     collection = db_client.get_or_create_collection(name=f"{summarizer_name}")
     default_embedding_function = embedding_functions.DefaultEmbeddingFunction()
-    maximum_embedded_summarized_text = 8000
-    maximum_embedded_docs = 100
-    chunk_size = 2000
+
 
     # summarize {chunk_size} characters at a time and concatenate the results
     summerized_text = ""
@@ -58,8 +59,8 @@ def summarize_result_in_chunks(summarize_this_str, summarizing_prompt, prompt_st
 def summarize_result(summarize_this_str, summarizing_prompt, prompt_str=None):
     # summarize 8000 characters at a time and concatenate the results
     # to avoid the 8000 character limit of the GPT-4 API
-    if len(summarize_this_str) > 8000:
-        summarize_this_str = summarize_this_str[:8000]
+    if len(summarize_this_str) > maximum_embedded_summarized_text:
+        summarize_this_str = summarize_this_str[:maximum_embedded_summarized_text]
 
     model = Gpt4()
     if prompt_str is None:
