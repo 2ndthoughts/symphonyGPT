@@ -21,6 +21,36 @@ class MySQLQueryRunner(Generator):
         self.mysql_params = parse_mysql_connection_string(self.conn_str)
         self.database = database
 
+    def is_database_exists(self, database_name):
+        # Replace these with your connection details
+        username = self.mysql_params['user']
+        password = self.mysql_params['password']
+        host = self.mysql_params['host']
+
+        # Connect to the MySQL Database
+        conn = None
+        try:
+            conn = mysql.connector.connect(
+                host=host,
+                user=username,
+                password=password
+            )
+            cursor = conn.cursor()
+            cursor.execute("SHOW DATABASES;")
+            databases = cursor.fetchall()
+            for db in databases:
+                if db[0] == database_name:
+                    print(f"Database {database_name} exists")
+                    return True
+
+            print(f"Database {database_name} does not exist")
+            return False
+        except mysql.connector.Error as e:
+            print(f"Error: {e}")
+        finally:
+            if conn.is_connected():
+                conn.close()
+
     def load_excel(self, excel_file, dataset_name):
         # Replace these with your connection details
         username = self.mysql_params['user']
