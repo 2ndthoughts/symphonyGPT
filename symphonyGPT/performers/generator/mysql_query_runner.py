@@ -92,6 +92,9 @@ class MySQLQueryRunner(Generator):
                 non_empty_columns = df.columns[df.notna().any()].tolist()
                 df = df[non_empty_columns]
 
+                # Strip leading and trailing spaces from column names
+                df.columns = df.columns.str.strip()
+
                 # print(df.head())
 
                 # Write to MySQL, using sheet name as table name
@@ -177,7 +180,7 @@ class MySQLQueryRunner(Generator):
                 # 'replace', 'append', or 'fail'
                 df.to_sql(dataset_name, con=engine, index=False, if_exists='append')
 
-                break # no errors, so break out of the loop
+                break  # no errors, so break out of the loop
             except Exception as e:
                 print(f"Error loading CSV file: {e}")
                 # if the Exception contains the words "'utf-8' codec" then try 'latin1' encoding
