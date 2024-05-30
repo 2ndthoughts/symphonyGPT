@@ -172,6 +172,9 @@ class MySQLQueryRunner(Generator):
                 # Specify the sheet name or its index as sheet_name parameter
                 df = pd.read_csv(csv_file, header=0, index_col=False, encoding=encoding, low_memory=False)
 
+                # Strip leading and trailing spaces from column names
+                df.columns = df.columns.str.strip()
+
                 # SQLAlchemy engine for MySQL connection
                 engine = create_engine(f'mysql+mysqlconnector://{username}:{password}@{host}/{dataset_name}')
 
