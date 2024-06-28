@@ -44,7 +44,7 @@ class CourtListenerExtractor(APIExtractor):
             if word != "":
                 q_arg += f'{word} {self.joiner} '
 
-        params = {'q': q_arg[:-5], 'order_by': 'citeCount desc', 'stat_Precedential': 'on'}
+        params = {'q': q_arg[:-5], 'order_by': 'citeCount desc', 'stat_Precedential':'on', 'court': 'waed wawd wash washctapp'}
         self.util.debug_print(f"CourtListenerExtractor.perform() params: {params}")
 
         # The headers for the request
