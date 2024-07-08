@@ -7,8 +7,9 @@ from symphonyGPT.symphony.util import Util
 
 class Movement:
 
-    def __init__(self, prompt_str=None, performers=None, outcome_strategy=None, conductor=None, prompt_classifier=None):
-        self.concurrent = True  # 6 times faster but requires high throughput with API
+    def __init__(self, prompt_str=None, performers=None, outcome_strategy=None, conductor=None, prompt_classifier=None,
+                 concurrently=True):
+        self.concurrent = concurrently  # 6 times faster when True but requires high throughput with API
 
         self.classifier = prompt_classifier
         self.util = Util()
