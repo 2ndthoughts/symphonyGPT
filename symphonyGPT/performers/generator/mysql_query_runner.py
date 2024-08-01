@@ -181,14 +181,19 @@ class MySQLQueryRunner(Generator):
                 # Load data into MySQL - replace 'your_table_name' with your actual table name
                 # The 'if_exists' parameter defines what to do if the table already exists:
                 # 'replace', 'append', or 'fail'
-                df.to_sql(dataset_name, con=engine, index=False, if_exists='append')
+
+                # parse table_name from csv_file
+                table_name = csv_file.split("/")[-1].split(".")[0]
+                print(f"Loading CSV file into table '{table_name}' ...")
+
+                df.to_sql(table_name, con=engine, index=False, if_exists='append')
 
                 break  # no errors, so break out of the loop
             except Exception as e:
                 print(f"Error loading CSV file: {e}")
                 # if the Exception contains the words "'utf-8' codec" then try 'latin1' encoding
                 if 'utf-8' in str(e):
-                    print("Trying 'latin1' encoding ...")
+                    print("Trying 'latin1' encoding ...", flush=True)
                     continue
 
     def drop_database(self, database_name):
