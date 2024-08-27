@@ -10,11 +10,21 @@ class ChatCompletionPerformer(OpenAIPerformer):
         # self.set_model_attribute("max_tokens", 500) # maximium number of tokens to generate
 
     def perform(self, prompt):
+        user_prompt = prompt.get_prompt()
+
+        message_array =[{"role": "system", "content": prompt.system_prompt}]
+
+        # if previous_prompt and previous_response are set, add them to the message array
+        if prompt.previous_prompt is not None and prompt.previous_response is not None:
+            message_array.append({"role": "user", "content": prompt.previous_prompt})
+            message_array.append({"role": "assistant", "content": prompt.previous_response})
+
+        # now add the user prompt
+        message_array.append({"role": "user", "content": user_prompt})
+
         response = openai.ChatCompletion.create(
             **self.get_model_attributes(),
-            messages=[
-                {"role": "user", "content": prompt.get_prompt()}
-            ]
+            messages=message_array
         )
         self.set_raw_response(response.choices[0].message.content)
 
