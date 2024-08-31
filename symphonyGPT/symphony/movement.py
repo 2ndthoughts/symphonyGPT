@@ -8,7 +8,7 @@ from symphonyGPT.symphony.util import Util
 class Movement:
 
     def __init__(self, prompt_str=None, performers=None, outcome_strategy=None, conductor=None, prompt_classifier=None,
-                 previous_prompt=None, previous_response=None, concurrently=True):
+                 previous_prompt=None, previous_response=None, system_prompt=None, concurrently=True):
         self.concurrent = concurrently  # 6 times faster when True but requires high throughput with API
 
         self.classifier = prompt_classifier
@@ -16,6 +16,9 @@ class Movement:
         self.prompt = Prompt()
         if prompt_str is not None:
             self.prompt.set_prompt(prompt_str)
+
+        if system_prompt is not None:
+            self.prompt.set_system_prompt(system_prompt)
 
         if previous_prompt is not None:
             self.prompt.set_previous_prompt(previous_prompt)
