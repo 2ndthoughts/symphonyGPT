@@ -1,7 +1,7 @@
 from symphonyGPT.performers.language_model.openai_performers.chat_completion_performer import ChatCompletionPerformer
 
 
-class Gpt4(ChatCompletionPerformer):
+class Gpt4oMini(ChatCompletionPerformer):
 
     def __init__(self):
         super().__init__()
