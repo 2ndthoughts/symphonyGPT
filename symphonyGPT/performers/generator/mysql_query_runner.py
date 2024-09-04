@@ -254,6 +254,10 @@ class MySQLQueryRunner(Generator):
                 results.append(row_dict)
 
             answer = '\n'.join([str(row) for row in results])
+
+            if answer == "":
+                answer = "No results returned"
+
             self.cache.set("MySQLQueryRunner.result", answer)
         except mysql.connector.Error as e:
             answer = f"Error: {e}"
