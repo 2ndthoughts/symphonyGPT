@@ -36,7 +36,11 @@ class Symphony:
                 prompt_str = movement.prompt.get_prompt()
 
             if "{}" in prompt_str and movement_output is not None:
-                prompt_str = prompt_str.format(movement_output)
+                try:
+                    prompt_str = prompt_str.format(movement_output)
+                except Exception as e:
+                    self.util.debug_print(f"Symphony.perform() error: {e}")
+                    prompt_str = prompt_str.replace("{}", "")
 
             movement_output = movement.perform(prompt_str, movement_output)
             self.enumerated_responses = f"{self.enumerated_responses}{movement_output}\n"
