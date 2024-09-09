@@ -141,7 +141,7 @@ class MySQLQueryRunner(Generator):
                         cursor.execute(command)
 
                 db.commit()  # Commit the transaction
-                #print("MySQL Dump file has been loaded successfully.")
+                #print("SQL Dump file has been loaded successfully.")
             except mysql.connector.Error as err:
                 db.rollback()  # Rollback in case of error
                 print(f"Failed executing command: {err}")
@@ -211,7 +211,7 @@ class MySQLQueryRunner(Generator):
         engine.dispose()
 
     def perform(self, prompt):
-        self.util.debug_print("MySQLQueryRunner.perform() called")
+        self.util.debug_print("SQLQueryRunner.perform() called")
 
         sql_text = self.util.extract_answer(prompt.get_prompt())
         sql = self.util.extract_between(sql_text, "```sql", "```")
@@ -220,8 +220,8 @@ class MySQLQueryRunner(Generator):
 
         self.util.debug_print(f"extracted sql:\n{sql}")
 
-        self.cache.set("MySQLQueryRunner.sql", sql)
-        self.cache.set("MySQLQueryRunner.error", "None")  # clear any previous error
+        self.cache.set("SQLQueryRunner.sql", sql)
+        self.cache.set("SQLQueryRunner.error", "None")  # clear any previous error
 
         # Connect to the MySQL Database
         conn = None
@@ -258,10 +258,10 @@ class MySQLQueryRunner(Generator):
             if answer == "":
                 answer = "No results returned"
 
-            self.cache.set("MySQLQueryRunner.result", answer)
+            self.cache.set("SQLQueryRunner.result", answer)
         except mysql.connector.Error as e:
             answer = f"Error: {e}"
-            self.cache.set("MySQLQueryRunner.error", f"Error: {e}")
+            self.cache.set("SQLQueryRunner.error", f"Error: {e}")
         finally:
             if conn.is_connected():
                 conn.close()

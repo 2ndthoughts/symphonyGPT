@@ -30,7 +30,7 @@ class MySQLSchemaExtractor(APIExtractor):
         conn = None
         try:
             # reset the cache for errors
-            self.cache.delete("MySQLSchemaExtractor.error")
+            self.cache.delete("SQLSchemaExtractor.error")
             database_name = get_database_name(self.mysql_params, self.database)
 
             try:
@@ -44,13 +44,13 @@ class MySQLSchemaExtractor(APIExtractor):
             except Exception as e:
                 error_str = f"Failed to connect to the database: {database_name}, error: {e}"
                 print(error_str, file=sys.stderr)
-                self.cache.set("MySQLSchemaExtractor.error", error_str)
+                self.cache.set("SQLSchemaExtractor.error", error_str)
                 return
 
-            self.cache.set("MySQLSchemaExtractor.database", database_name)
-            self.cache.set("MySQLSchemaExtractor.host", self.mysql_params['host'])
-            self.cache.set("MySQLSchemaExtractor.port", self.mysql_params['port'])
-            self.cache.set("MySQLSchemaExtractor.user", self.mysql_params['user'])
+            self.cache.set("SQLSchemaExtractor.database", database_name)
+            self.cache.set("SQLSchemaExtractor.host", self.mysql_params['host'])
+            self.cache.set("SQLSchemaExtractor.port", self.mysql_params['port'])
+            self.cache.set("SQLSchemaExtractor.user", self.mysql_params['user'])
 
             self.util.debug_print(
                 f"Connected to the database '{database_name}' on {self.mysql_params['host']} as {self.mysql_params['user']}")
@@ -77,7 +77,7 @@ class MySQLSchemaExtractor(APIExtractor):
             for row in rows:
                 answer += row[1]
 
-            self.cache.set("MySQLSchemaExtractor.schema", answer)
+            self.cache.set("SQLSchemaExtractor.schema", answer)
         finally:
             if conn is not None and conn.is_connected():
                 conn.close()

@@ -91,7 +91,7 @@ class SnowflakeSchemaExtractor(APIExtractor):
         conn = None
         try:
             # reset the cache for errors
-            self.cache.delete("SnowflakeSchemaExtractor.error")
+            self.cache.delete("SQLSchemaExtractor.error")
             database_name = self.database
 
             try:
@@ -107,15 +107,15 @@ class SnowflakeSchemaExtractor(APIExtractor):
             except Exception as e:
                 error_str = f"Failed to connect to the database: {database_name}, error: {e}"
                 print(error_str, file=sys.stderr)
-                self.cache.set("SnowflakeSchemaExtractor.error", error_str)
+                self.cache.set("SQLSchemaExtractor.error", error_str)
                 return
 
-            self.cache.set("SnowflakeSchemaExtractor.user", self.user)
-            self.cache.set("SnowflakeSchemaExtractor.account", self.account)
-            self.cache.set("SnowflakeSchemaExtractor.warehouse", self.warehouse)
-            self.cache.set("SnowflakeSchemaExtractor.database", database_name)
-            self.cache.set("SnowflakeSchemaExtractor.schema", self.schema)
-            self.cache.set("SnowflakeSchemaExtractor.role", self.role)
+            self.cache.set("SQLSchemaExtractor.user", self.user)
+            self.cache.set("SQLSchemaExtractor.account", self.account)
+            self.cache.set("SQLSchemaExtractor.warehouse", self.warehouse)
+            self.cache.set("SQLSchemaExtractor.database", database_name)
+            self.cache.set("SQLSchemaExtractor.schema", self.schema)
+            self.cache.set("SQLSchemaExtractor.role", self.role)
 
 
             self.util.debug_print(
@@ -143,7 +143,7 @@ class SnowflakeSchemaExtractor(APIExtractor):
                 answer += create_table_query
                 cursor.close()
 
-            self.cache.set("SnowflakeSchemaExtractor.schema", answer)
+            self.cache.set("SQLSchemaExtractor.schema", answer)
         finally:
             # check if conn is connected, then close it
             if conn is not None and is_connected(conn):

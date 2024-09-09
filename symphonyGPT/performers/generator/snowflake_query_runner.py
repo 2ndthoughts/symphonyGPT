@@ -87,7 +87,7 @@ class SnowflakeQueryRunner(Generator):
 
 
     def perform(self, prompt):
-        self.util.debug_print("SnowflakeQueryRunner.perform() called")
+        self.util.debug_print("SQLQueryRunner.perform() called")
 
         sql_text = self.util.extract_answer(prompt.get_prompt())
         sql = self.util.extract_between(sql_text, "```sql", "```")
@@ -96,8 +96,8 @@ class SnowflakeQueryRunner(Generator):
 
         self.util.debug_print(f"extracted sql:\n{sql}")
 
-        self.cache.set("SnowflakeQueryRunner.sql", sql)
-        self.cache.set("SnowflakeQueryRunner.error", "None")  # clear any previous error
+        self.cache.set("SQLQueryRunner.sql", sql)
+        self.cache.set("SQLQueryRunner.error", "None")  # clear any previous error
 
         # Connect to the MySQL Database
         conn = None
@@ -126,10 +126,10 @@ class SnowflakeQueryRunner(Generator):
             if answer == "":
                 answer = "No results returned"
 
-            self.cache.set("SnowflakeQueryRunner.result", answer)
+            self.cache.set("SQLQueryRunner.result", answer)
         except snowflake.connector.Error as e:
             answer = f"Error: {e}"
-            self.cache.set("SnowflakeQueryRunner.error", f"Error: {e}")
+            self.cache.set("SQLQueryRunner.error", f"Error: {e}")
         finally:
             if snowflake_schema_extractor.is_connected(conn):
                 conn.close()
