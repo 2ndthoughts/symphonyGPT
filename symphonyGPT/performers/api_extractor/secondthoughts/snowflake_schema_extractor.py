@@ -159,7 +159,7 @@ class SnowflakeSchemaExtractor(APIExtractor):
 # test main
 if __name__ == "__main__":
     m_test = Movement(
-        performers=[SnowflakeSchemaExtractor(connection_string='snowflake://2ndthoughts:Lucky*888@hwb17013.us-east-1/?warehouse=COMPUTE_WH&db=SNOWFLAKE_SAMPLE_DATA&schema=TPCDS_SF100TCL', table_name="all")]
+        performers=[SnowflakeSchemaExtractor(connection_string='snowflake://my_user:my_password@hwb17013.us-east-1/?warehouse=COMPUTE_WH&db=SNOWFLAKE_SAMPLE_DATA&schema=TPCDS_SF100TCL', table_name="all")]
     )
     symphony = Symphony(movements=[m_test], null_answer_break=True)
     res = symphony.perform("blah blah blah")

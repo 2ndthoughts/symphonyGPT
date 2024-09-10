@@ -152,7 +152,7 @@ if __name__ == "__main__":
     prompt = content
 
     m_test = Movement(
-        performers=[SnowflakeQueryRunner(connection_string='snowflake://2ndthoughts:Lucky*888@hwb17013.us-east-1/?warehouse=COMPUTE_WH&db=SNOWFLAKE_SAMPLE_DATA&schema=TPCDS_SF100TCL')]
+        performers=[SnowflakeQueryRunner(connection_string='snowflake://my_user:my_password@hwb17013.us-east-1/?warehouse=COMPUTE_WH&db=SNOWFLAKE_SAMPLE_DATA&schema=TPCDS_SF100TCL')]
     )
 
     if "```sql" in prompt:
