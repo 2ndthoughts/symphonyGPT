@@ -16,12 +16,16 @@ from symphonyGPT.symphony.symphony_cache import SymphonyCache
 
 
 class SnowflakeQueryRunner(Generator):
-    def __init__(self, database="use_connection_string"):
+    def __init__(self, database="use_connection_string", connection_string=None):
         super().__init__()
         self.cache = SymphonyCache("/tmp/symphonyGPT_cache")
 
         # snowflake://my_user:my_password@xy12345.us-east-1.aws/?warehouse=my_warehouse&db=my_database&schema=my_schema&role=my_role
-        self.conn_str = APIKeys().get_api_key("snowflake_connection_string")
+        if connection_string is not None:
+            self.conn_str = connection_string
+        else:
+            self.conn_str = APIKeys().get_api_key("snowflake_connection_string")
+
         # Parse the connection string
         parsed_url = urlparse(self.conn_str)
 
@@ -142,13 +146,13 @@ class SnowflakeQueryRunner(Generator):
 if __name__ == "__main__":
     with open(
             "../../../../../Library/Application "
-            "Support/JetBrains/PyCharmCE2024.2y/scratches/sandbox/test_snowflake_query_runner.txt", 'r') as file:
+            "Support/JetBrains/PyCharmCE2024.2/scratches/sandbox/test_snowflake_query_runner.txt", 'r') as file:
         content = file.read()
 
     prompt = content
 
     m_test = Movement(
-        performers=[SnowflakeQueryRunner()]
+        performers=[SnowflakeQueryRunner(connection_string='snowflake://2ndthoughts:Lucky*888@hwb17013.us-east-1/?warehouse=COMPUTE_WH&db=SNOWFLAKE_SAMPLE_DATA&schema=TPCDS_SF100TCL')]
     )
 
     if "```sql" in prompt:

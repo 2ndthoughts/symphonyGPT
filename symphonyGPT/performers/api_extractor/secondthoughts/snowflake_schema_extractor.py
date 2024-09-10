@@ -45,14 +45,17 @@ def is_connected(conn):
 
 
 class SnowflakeSchemaExtractor(APIExtractor):
-    def __init__(self, database="use_connection_string", table_name="all"):
+    def __init__(self, database="use_connection_string", table_name="all", connection_string=None):
         super().__init__()
         self.cache = SymphonyCache("/tmp/symphonyGPT_cache")
 
         self.table_name = table_name
         
         # snowflake://my_user:my_password@xy12345.us-east-1.aws/?warehouse=my_warehouse&db=my_database&schema=my_schema&role=my_role
-        self.conn_str = APIKeys().get_api_key("snowflake_connection_string")
+        if connection_string is not None:
+            self.conn_str = connection_string
+        else:
+            self.conn_str = APIKeys().get_api_key("snowflake_connection_string")
         # Parse the connection string
         parsed_url = urlparse(self.conn_str)
 
@@ -156,7 +159,7 @@ class SnowflakeSchemaExtractor(APIExtractor):
 # test main
 if __name__ == "__main__":
     m_test = Movement(
-        performers=[SnowflakeSchemaExtractor(table_name="all")]
+        performers=[SnowflakeSchemaExtractor(connection_string='snowflake://2ndthoughts:Lucky*888@hwb17013.us-east-1/?warehouse=COMPUTE_WH&db=SNOWFLAKE_SAMPLE_DATA&schema=TPCDS_SF100TCL', table_name="all")]
     )
     symphony = Symphony(movements=[m_test], null_answer_break=True)
     res = symphony.perform("blah blah blah")
