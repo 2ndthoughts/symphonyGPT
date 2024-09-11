@@ -115,6 +115,8 @@ class SnowflakeQueryRunner(Generator):
                 f"Connected to the database '{database_name}' on {self.account} as {self.user}")
             # Create a cursor object
             cursor = conn.cursor()
+            cursor.execute("ALTER SESSION SET STATEMENT_TIMEOUT_IN_SECONDS = 120") # set query timeout to 120 seconds
+
             cursor.execute(sql)
 
             # Retrieve column headers
