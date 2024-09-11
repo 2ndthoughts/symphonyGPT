@@ -62,7 +62,9 @@ class SnowflakeQueryRunner(Generator):
             warehouse=self.warehouse,
             database=self.database,
             schema=self.schema,
-            role=self.role
+            role=self.role,
+            login_timeout=60,  # Timeout for login (seconds)
+            network_timeout=300  # Timeout for queries (seconds)
         )
 
     def is_database_exists(self, database_name):
@@ -91,6 +93,7 @@ class SnowflakeQueryRunner(Generator):
 
 
     def perform(self, prompt):
+        cursor = None
         self.util.debug_print("SQLQueryRunner.perform() called")
 
         sql_text = self.util.extract_answer(prompt.get_prompt())
@@ -131,13 +134,22 @@ class SnowflakeQueryRunner(Generator):
                 answer = "No results returned"
 
             self.cache.set("SQLQueryRunner.result", answer)
-        except snowflake.connector.Error as e:
+        except snowflake.connector.errors.ProgrammingError as e:
+            # Handle specific SQL errors
+            answer = f"SQL ProgrammingError: {e}"
+            self.cache.set("SQLQueryRunner.error", f"Error: {e}")
+        except snowflake.connector.errors.Error as e:
+            # Handle other Snowflake connector errors
             answer = f"Error: {e}"
             self.cache.set("SQLQueryRunner.error", f"Error: {e}")
+        except Exception as e:
+            # Handle any other errors (network issues, etc.)
+            answer = f"An unexpected error occurred: {e}"
+            self.cache.set("SQLQueryRunner.error", f"Error: {e}")
         finally:
-            if snowflake_schema_extractor.is_connected(conn):
-                conn.close()
-                self.util.debug_print("Connection closed")
+            cursor.close()
+            conn.close()
+            self.util.debug_print("Connection closed")
 
         self.set_raw_response(answer)
 
