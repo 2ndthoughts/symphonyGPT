@@ -64,7 +64,7 @@ class SnowflakeQueryRunner(Generator):
             schema=self.schema,
             role=self.role,
             login_timeout=60,  # Timeout for login (seconds)
-            network_timeout=300  # Timeout for queries (seconds)
+            network_timeout=600  # Timeout for queries (seconds)
         )
 
     def is_database_exists(self, database_name):
@@ -115,7 +115,7 @@ class SnowflakeQueryRunner(Generator):
                 f"Connected to the database '{database_name}' on {self.account} as {self.user}")
             # Create a cursor object
             cursor = conn.cursor()
-            cursor.execute("ALTER SESSION SET STATEMENT_TIMEOUT_IN_SECONDS = 120") # set query timeout to 120 seconds
+            cursor.execute("ALTER SESSION SET STATEMENT_TIMEOUT_IN_SECONDS = 600") # set query timeout to 10 minutes for testing
 
             cursor.execute(sql)
 
