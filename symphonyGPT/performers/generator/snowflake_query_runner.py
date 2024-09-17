@@ -149,11 +149,18 @@ class SnowflakeQueryRunner(Generator):
             answer = f"An unexpected error occurred: {e}"
             self.cache.set("SQLQueryRunner.error", f"Error: {e}")
         finally:
-            cursor.close()
-            conn.close()
+            if cursor is not None:
+                cursor.close()
+
+            if conn is not None:
+                conn.close()
+
             self.util.debug_print("Connection closed")
 
         self.set_raw_response(answer)
+
+    def drop_database(self, database_name):
+        pass
 
 
 # test main
