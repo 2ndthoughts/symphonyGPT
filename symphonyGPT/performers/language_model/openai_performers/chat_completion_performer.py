@@ -21,11 +21,15 @@ class ChatCompletionPerformer(OpenAIPerformer):
 
         # now add the user prompt
         message_array.append({"role": "user", "content": user_prompt})
+        try:
+            response = openai.ChatCompletion.create(
+                **self.get_model_attributes(),
+                messages=message_array
+            )
+        except Exception as e:
+            print(e)
+            return None
 
-        response = openai.ChatCompletion.create(
-            **self.get_model_attributes(),
-            messages=message_array
-        )
         self.set_raw_response(response.choices[0].message.content)
 
     def set_model_attribute(self, key, value):
