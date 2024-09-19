@@ -27,7 +27,7 @@ class ChatCompletionPerformer(OpenAIPerformer):
                 messages=message_array
             )
         except Exception as e:
-            print(e)
+            print("\n" + str(e) + "\n", flush=True)
             return None
 
         self.set_raw_response(response.choices[0].message.content)
