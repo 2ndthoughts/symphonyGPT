@@ -138,6 +138,21 @@ class SnowflakeSchemaExtractor(APIExtractor):
                     create_table_query = create_create_table_query(row[1], columns)
                     answer += create_table_query + "\n"
 
+                    # get table stats
+                    # table_stats_query = (f"SELECT COUNT(*) AS record_count, AVG(LENGTH(TO_JSON(OBJECT_CONSTRUCT(*)))) AS "
+                    #                      f"average_record_size, MIN(LENGTH(TO_JSON(OBJECT_CONSTRUCT(*)))) AS min_record_size, "
+                    #                      f"MAX(LENGTH(TO_JSON(OBJECT_CONSTRUCT(*)))) AS max_record_size FROM {table_name};")
+                    #
+                    # try:
+                    #     cursor.execute(table_stats_query)
+                    #     table_stats = cursor.fetchall()
+                    #     answer += f"\nRecord Count: {table_stats[0][0]}\n"
+                    #     answer += f"Average Record Size: {table_stats[0][1]}\n"
+                    #     answer += f"Min Record Size: {table_stats[0][2]}\n"
+                    #     answer += f"Max Record Size: {table_stats[0][3]}\n\n"
+                    # except Exception as e:
+                    #     self.util.debug_print(f"Error fetching table stats: {e}")
+
                 cursor.close()
             else:
                 cursor.execute(f"DESCRIBE TABLE {self.table_name}")
