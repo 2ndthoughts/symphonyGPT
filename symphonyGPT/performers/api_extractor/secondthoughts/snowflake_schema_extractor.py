@@ -27,7 +27,7 @@ def create_create_table_query(table_name, columns):
         create_table_statement += f"    {column_name} {column_type} {is_nullable},\n"
 
     # Remove the last comma and newline, and close the statement
-    create_table_statement = create_table_statement.rstrip(",\n") + "\n);"
+    # create_table_statement = create_table_statement.rstrip(",\n") + "\n);"
 
     return create_table_statement
 
@@ -117,7 +117,7 @@ class SnowflakeSchemaExtractor(APIExtractor):
             self.cache.set("SQLSchemaExtractor.account", self.account)
             self.cache.set("SQLSchemaExtractor.warehouse", self.warehouse)
             self.cache.set("SQLSchemaExtractor.database", database_name)
-            self.cache.set("SQLSchemaExtractor.schema", self.schema)
+            self.cache.set("SQLSchemaExtractor.schema_name", self.schema)
             self.cache.set("SQLSchemaExtractor.role", self.role)
 
 
@@ -136,6 +136,31 @@ class SnowflakeSchemaExtractor(APIExtractor):
                     columns = cursor.fetchall()
 
                     create_table_query = create_create_table_query(row[1], columns)
+
+                    # get primary key information
+                    cursor.execute(f"SHOW PRIMARY KEYS IN TABLE {table_name}")
+                    primary_keys = cursor.fetchall()
+
+                    # append primary keys to create table query
+                    if len(primary_keys) > 0:
+                        create_table_query = create_table_query.rstrip(",\n") + ",\n"
+                        create_table_query += "    PRIMARY KEY ("
+                        for pk in primary_keys:
+                            create_table_query += f"{pk[4]}, "
+                        create_table_query = create_table_query.rstrip(", ") + "),\n"
+
+                    # get foreign keys information
+                    cursor.execute(f"SHOW IMPORTED KEYS IN TABLE {table_name}")
+                    foreign_keys = cursor.fetchall()
+
+                    # append foreign keys to create table query
+                    if len(foreign_keys) > 0:
+                        create_table_query = create_table_query.rstrip(",\n") + ",\n"
+                        for fk in foreign_keys:
+                            create_table_query += f"    CONSTRAINT {fk[12]} FOREIGN KEY ({fk[8]}) REFERENCES {fk[3]}({fk[4]}),\n"
+                            
+                    create_table_query = create_table_query.rstrip(",\n") + "\n);"
+
                     answer += create_table_query + "\n"
 
                     # get table stats
