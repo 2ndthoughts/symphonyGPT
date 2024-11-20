@@ -30,10 +30,6 @@ class ChatCompletionPerformer(OpenAIPerformer):
             )
         except Exception as e:
             error_str = str(e)
-            # make error_string plain text without html
-            error_str = error_str.replace("<", "")
-            error_str = error_str.replace(">", "")
-            error_str = error_str.replace("\n", "")
             self.set_raw_response("Error: " + error_str)
             return None
 
