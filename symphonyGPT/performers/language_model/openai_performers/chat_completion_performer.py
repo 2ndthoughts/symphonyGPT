@@ -1,6 +1,6 @@
-import sys
-
 import openai
+from openai import APIError
+
 from symphonyGPT.performers.language_model.openai_performers.openai_performer import OpenAIPerformer
 
 
@@ -30,7 +30,9 @@ class ChatCompletionPerformer(OpenAIPerformer):
             )
         except Exception as e:
             error_str = str(e)
-            self.set_raw_response("Error: " + error_str)
+            error_str = error_str.replace("\r", " ")
+            error_str = error_str.replace("\n", " ")
+            self.set_raw_response("Error: '" + error_str + "'")
             return None
 
         self.set_raw_response(response.choices[0].message.content)
