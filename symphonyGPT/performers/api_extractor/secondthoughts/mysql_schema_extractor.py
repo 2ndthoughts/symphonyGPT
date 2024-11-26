@@ -10,10 +10,14 @@ from symphonyGPT.symphony.symphony_cache import SymphonyCache
 
 
 class MySQLSchemaExtractor(APIExtractor):
-    def __init__(self, database="use_connection_string", table_name="all"):
+    def __init__(self, database="use_connection_string", table_name="all", connection_string=None):
         super().__init__()
         # mysql://root:password123@localhost:3306/mydatabase
-        self.conn_str = APIKeys().get_api_key("mysql_connection_string")
+        if connection_string is not None:
+            self.conn_str = connection_string
+        else:
+            self.conn_str = APIKeys().get_api_key("mysql_connection_string")
+
         # Parse the connection string
         self.mysql_params = parse_mysql_connection_string(self.conn_str)
         self.database = database
