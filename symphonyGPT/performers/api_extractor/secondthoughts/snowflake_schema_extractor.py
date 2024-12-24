@@ -128,17 +128,17 @@ class SnowflakeSchemaExtractor(APIExtractor):
 
             # Executing the DESCRIBE command
             if self.table_name == "all":
-                cursor.execute(f"SHOW TABLES")
+                cursor.execute(f"SHOW OBJECTS")
                 rows = cursor.fetchall()
                 for row in rows:
                     table_name = row[1]
-                    cursor.execute(f"DESCRIBE TABLE {table_name}") # table name in index 1
+                    cursor.execute(f"DESCRIBE VIEW {table_name}") # table name in index 1
                     columns = cursor.fetchall()
 
                     create_table_query = create_create_table_query(row[1], columns)
 
                     # get primary key information
-                    cursor.execute(f"SHOW PRIMARY KEYS IN TABLE {table_name}")
+                    cursor.execute(f"SHOW PRIMARY KEYS IN {table_name}")
                     primary_keys = cursor.fetchall()
 
                     # append primary keys to create table query
@@ -150,7 +150,7 @@ class SnowflakeSchemaExtractor(APIExtractor):
                         create_table_query = create_table_query.rstrip(", ") + "),\n"
 
                     # get foreign keys information
-                    cursor.execute(f"SHOW IMPORTED KEYS IN TABLE {table_name}")
+                    cursor.execute(f"SHOW IMPORTED KEYS IN {table_name}")
                     foreign_keys = cursor.fetchall()
 
                     # append foreign keys to create table query
