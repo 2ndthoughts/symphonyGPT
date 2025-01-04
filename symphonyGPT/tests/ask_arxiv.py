@@ -2,7 +2,7 @@ import chromadb
 
 from symphonyGPT.performers.api_extractor.secondthoughts.arxiv_extractor import ArxivExtractor
 from symphonyGPT.performers.generator.pdf_generator import PDFGenerator
-from symphonyGPT.performers.language_model.openai_performers.gpt_4 import Gpt4
+from symphonyGPT.performers.language_model.xai_performers.grok_beta import GrokBeta
 from symphonyGPT.symphony.classifier.huggingface.keyphrase_extraction_token_classifier import \
     KeyphraseExtractionTokenClassifier
 from symphonyGPT.symphony.movement import Movement
@@ -36,14 +36,14 @@ def main() -> None:
     m_list_and_conclude = Movement(
         prompt_str="First, list all publications by id, authors, published, link, title, and summary. " +
                    "Next, based on all the publications, generate a conclusion for '" + prompt + "' : {} ",
-        performers=[Gpt4()]
+        performers=[GrokBeta()]
     )
 
     m_generate_article = Movement(
         prompt_str="Generate an article and its title based on '" + prompt + "using and citing the following "
                                                                              "publications with title, authors, and "
                                                                              "link as a list': '{}' ",
-        performers=[Gpt4()]
+        performers=[GrokBeta()]
     )
 
     m_create_pdf = Movement(

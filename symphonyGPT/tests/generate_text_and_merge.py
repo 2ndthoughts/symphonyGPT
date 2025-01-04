@@ -1,10 +1,11 @@
 from symphonyGPT.performers.language_model.openai_performers.gpt_35_turbo_0301 import Gpt35Turbo0301
-from symphonyGPT.performers.language_model.openai_performers.gpt_4 import Gpt4
+from symphonyGPT.performers.language_model.openai_performers.gpt_4o_mini import Gpt4oMini
 from symphonyGPT.performers.language_model.openai_performers.text_ada_001 import TextAda001
 from symphonyGPT.performers.language_model.openai_performers.text_babbage_001 import TextBabbage001
 from symphonyGPT.performers.language_model.openai_performers.text_curie_001 import TextCurie001
 from symphonyGPT.performers.language_model.openai_performers.text_davinci_002 import TextDavinci002
 from symphonyGPT.performers.language_model.openai_performers.text_davinci_003 import TextDavinci003
+from symphonyGPT.performers.language_model.xai_performers.grok_beta import GrokBeta
 from symphonyGPT.symphony.movement import Movement
 from symphonyGPT.symphony.symphony import Symphony
 
@@ -24,12 +25,12 @@ def main() -> None:
             TextAda001(),
             TextDavinci002(),
             TextDavinci003(),
-            Gpt35Turbo0301()
+            Gpt4oMini()
         ]
     )
     movement_combine_answers = Movement(
         prompt_str="Merge the text in the answer attributes elegantly: {}",
-        performers=[Gpt4()]
+        performers=[Gpt4oMini()]
     )
 
     symphony = Symphony(movements=[movement_1, movement_combine_answers])
