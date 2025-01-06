@@ -1,6 +1,7 @@
 import openai
-from openai import APIError
+from openai import APIError, OpenAI
 
+from symphonyGPT.performers.api_keys import APIKeys
 from symphonyGPT.performers.language_model.openai_performers.openai_performer import OpenAIPerformer
 
 
@@ -24,7 +25,10 @@ class ChatCompletionPerformer(OpenAIPerformer):
         # now add the user prompt
         message_array.append({"role": "user", "content": user_prompt})
         try:
-            response = openai.ChatCompletion.create(
+            client = OpenAI(
+                api_key=APIKeys().get_api_key("openai")
+            )
+            response = client.chat.completions.create(
                 **self.get_model_attributes(),
                 messages=message_array
             )

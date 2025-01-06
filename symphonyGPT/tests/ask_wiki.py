@@ -2,6 +2,7 @@ from symphonyGPT.performers.api_extractor.secondthoughts.wikipedia_extractor imp
 from symphonyGPT.performers.generator.pdf_generator import PDFGenerator
 from symphonyGPT.performers.generator.secondthoughts.prompt_context_generator import PromptContextGenerator
 from symphonyGPT.performers.language_model.openai_performers.gpt_4 import Gpt4
+from symphonyGPT.performers.language_model.xai_performers.grok_beta import GrokBeta
 from symphonyGPT.symphony.movement import Movement
 from symphonyGPT.symphony.symphony import Symphony
 
@@ -27,7 +28,7 @@ def main() -> None:
 
     m_summarize_generated_prompt = Movement(
         prompt_str="create a concise prompt from the following questions: '{}'",
-        performers=[Gpt4()]
+        performers=[GrokBeta()]
     )
 
     m_extract = Movement(
@@ -38,7 +39,7 @@ def main() -> None:
         prompt_str="Generate an article with a title based on '"
                    + prompt + " using content from the following list of articles and citing the "
                               "title, description, and article_url as a list in the end ': '{}' ",
-        performers=[Gpt4()]
+        performers=[GrokBeta()]
     )
 
     m_create_pdf = Movement(

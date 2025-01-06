@@ -1,3 +1,4 @@
+from symphonyGPT.performers.language_model.openai_performers.gpt_4o_mini import Gpt4oMini
 from symphonyGPT.performers.language_model.xai_performers.grok_beta import GrokBeta
 from symphonyGPT.symphony.movement import Movement
 from symphonyGPT.symphony.outcome_strategy.outcome_strategy import OutcomeStrategy
@@ -13,24 +14,24 @@ def main() -> None:
     prompt = "Translate to Chinese 'How are you'"
 
     movement_chinese = Movement(
-        performers=[GrokBeta()],
+        performers=[Gpt4oMini()],
         outcome_strategy=OutcomeStrategy(format="answer_only")
     )
     movement_german = Movement(
         prompt_str="translate to German: {}",  # pass the result of the previous movement to the next movement using {}
-        performers=[GrokBeta()],
+        performers=[Gpt4oMini()],
         outcome_strategy=OutcomeStrategy(format="answer_only")
     )
 
     movement_french = Movement(
         prompt_str="translate to French: {}",
-        performers=[GrokBeta()],
+        performers=[Gpt4oMini()],
         outcome_strategy=OutcomeStrategy(format="answer_only")
     )
 
     movement_english = Movement(
         prompt_str="translate to English: {}",
-        performers=[GrokBeta()]
+        performers=[Gpt4oMini()]
         # the last one is not an array
     )
 
