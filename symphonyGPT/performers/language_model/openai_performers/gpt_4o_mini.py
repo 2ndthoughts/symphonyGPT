@@ -5,7 +5,7 @@ class Gpt4oMini(ChatCompletionPerformer):
 
     def __init__(self):
         super().__init__()
-        self.set_model_attribute("model", "gpt-4o-mini")
+        self.set_model_attribute("model", "gpt-4o-mini-2024-07-18")
 
     def perform(self, prompt):
         return super().perform(prompt)
