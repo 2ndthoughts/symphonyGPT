@@ -79,7 +79,7 @@ class MySQLSchemaExtractor(APIExtractor):
                             # get the field names from the cursor description
                             field_names = [i[0] for i in cursor.description]
 
-                            answer += "\n\nExample records:\n"
+                            answer += f"\n\nSample records for table {row[0]} and its fields:\n"
                             for example_row in example_rows:
                                 # combine the field names and example row into a dictionary
                                 example_dict = dict(zip(field_names, example_row))
