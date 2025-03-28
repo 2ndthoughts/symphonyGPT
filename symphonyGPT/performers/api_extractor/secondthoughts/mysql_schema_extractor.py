@@ -10,7 +10,7 @@ from symphonyGPT.symphony.symphony_cache import SymphonyCache
 
 
 class MySQLSchemaExtractor(APIExtractor):
-    def __init__(self, database="use_connection_string", table_name="all", connection_string=None):
+    def __init__(self, database="use_connection_string", table_name="all", example_records=0, connection_string=None):
         super().__init__()
         # mysql://root:password123@localhost:3306/mydatabase
         if connection_string is not None:
@@ -22,6 +22,7 @@ class MySQLSchemaExtractor(APIExtractor):
         self.mysql_params = parse_mysql_connection_string(self.conn_str)
         self.database = database
         self.table_name = table_name
+        self.example_records = example_records
         self.cache = SymphonyCache("/tmp/symphonyGPT_cache")
 
 
@@ -70,6 +71,19 @@ class MySQLSchemaExtractor(APIExtractor):
                     create_table_rows = cursor.fetchall()
                     for create_table_row in create_table_rows:
                         answer += create_table_row[1]
+
+                        # if example_records > 0, get example records for each table limit to example_records
+                        if self.example_records > 0:
+                            cursor.execute(f"SELECT * FROM `{row[0]}` LIMIT {self.example_records}")
+                            example_rows = cursor.fetchall()
+                            # get the field names from the cursor description
+                            field_names = [i[0] for i in cursor.description]
+
+                            answer += "\n\nExample records:\n"
+                            for example_row in example_rows:
+                                # combine the field names and example row into a dictionary
+                                example_dict = dict(zip(field_names, example_row))
+                                answer += str(example_dict) + "\n"
 
                     answer += "\n\n"
             else:
