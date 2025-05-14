@@ -4,7 +4,7 @@ class GrokBeta(ChatCompletionPerformer):
 
     def __init__(self):
         super().__init__()
-        self.set_model_attribute("model", "grok-beta")
+        self.set_model_attribute("model", "grok-3-mini-fast-beta")
 
     def perform(self, prompt):
         return super().perform(prompt)
