@@ -10,8 +10,12 @@ class ChatCompletionPerformer(OpenAIPerformer):
 
     def __init__(self):
         super().__init__()
+        self.api_name = None
         # don't restrict the output number of tokens
         # self.set_model_attribute("max_tokens", 500) # maximium number of tokens to generate
+
+    def set_api_name(self, api_name):
+        self.api_name = api_name
 
     def perform(self, prompt):
         user_prompt = prompt.get_prompt()
@@ -28,12 +32,22 @@ class ChatCompletionPerformer(OpenAIPerformer):
             ChatCompletionPerformer.conversation_array.append({"role": "user", "content": prompt.previous_prompt})
             ChatCompletionPerformer.conversation_array.append({"role": "assistant", "content": prompt.previous_response})
 
+        api_key = APIKeys().get_api_key(self.api_name)
+        if api_key is None:
+            self.set_raw_response("Error: No API key found for xai")
+            return None
+
+        api_base_url = APIKeys().get_api_base_url(self.api_name)
+        if api_base_url is None:
+            self.set_raw_response("Error: No API base URL found for xai")
+            return None
+
         # now add the user prompt
         ChatCompletionPerformer.conversation_array.append({"role": "user", "content": user_prompt})
         try:
             client = OpenAI(
-                api_key=APIKeys().get_api_key("openai"),
-                base_url=APIKeys().get_api_base_url("openai")
+                api_key=api_key,
+                base_url=api_base_url
             )
 
             completion = client.chat.completions.create(
