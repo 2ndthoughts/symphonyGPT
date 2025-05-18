@@ -1,6 +1,6 @@
-from symphonyGPT.performers.language_model.chat_completion_performer import ChatCompletionPerformer
+from symphonyGPT.performers.language_model.configurable_chat_completion_performer import ConfigurableChatCompletionPerformer
 
-class ConfigurableModelPerformer(ChatCompletionPerformer):
+class ConfigurableModelPerformer(ConfigurableChatCompletionPerformer):
 
     def __init__(self, api_name="openai", model_name="gpt-4.1-mini"):
         super().__init__()

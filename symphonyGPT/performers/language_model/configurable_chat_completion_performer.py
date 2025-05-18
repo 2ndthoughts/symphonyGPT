@@ -5,7 +5,7 @@ from symphonyGPT.performers.api_keys import APIKeys
 from symphonyGPT.performers.language_model.openai_performers.openai_performer import OpenAIPerformer
 
 
-class ChatCompletionPerformer(OpenAIPerformer):
+class ConfigurableChatCompletionPerformer(OpenAIPerformer):
     conversation_array = []
 
     def __init__(self):
@@ -21,16 +21,16 @@ class ChatCompletionPerformer(OpenAIPerformer):
         user_prompt = prompt.get_prompt()
 
         # if the conversation_array is empty, add the system prompt
-        if len(ChatCompletionPerformer.conversation_array) == 0:
+        if len(ConfigurableChatCompletionPerformer.conversation_array) == 0:
             if prompt.system_prompt is None:
-                ChatCompletionPerformer.conversation_array.append({"role": "system", "content": "You are a helpful assistant."})
+                ConfigurableChatCompletionPerformer.conversation_array.append({"role": "system", "content": "You are a helpful assistant."})
             else:
-                ChatCompletionPerformer.conversation_array.append({"role": "system", "content": prompt.system_prompt})
+                ConfigurableChatCompletionPerformer.conversation_array.append({"role": "system", "content": prompt.system_prompt})
 
         # if previous_prompt and previous_response are set, add them to the message array
         if prompt.previous_prompt is not None and prompt.previous_response is not None:
-            ChatCompletionPerformer.conversation_array.append({"role": "user", "content": prompt.previous_prompt})
-            ChatCompletionPerformer.conversation_array.append({"role": "assistant", "content": prompt.previous_response})
+            ConfigurableChatCompletionPerformer.conversation_array.append({"role": "user", "content": prompt.previous_prompt})
+            ConfigurableChatCompletionPerformer.conversation_array.append({"role": "assistant", "content": prompt.previous_response})
 
         api_key = APIKeys().get_api_key(self.api_name)
         if api_key is None:
@@ -43,7 +43,7 @@ class ChatCompletionPerformer(OpenAIPerformer):
             return None
 
         # now add the user prompt
-        ChatCompletionPerformer.conversation_array.append({"role": "user", "content": user_prompt})
+        ConfigurableChatCompletionPerformer.conversation_array.append({"role": "user", "content": user_prompt})
         try:
             client = OpenAI(
                 api_key=api_key,
@@ -52,7 +52,7 @@ class ChatCompletionPerformer(OpenAIPerformer):
 
             completion = client.chat.completions.create(
                 **self.get_model_attributes(),
-                messages=ChatCompletionPerformer.conversation_array
+                messages=ConfigurableChatCompletionPerformer.conversation_array
             )
         except Exception as e:
             error_str = str(e)
@@ -64,10 +64,10 @@ class ChatCompletionPerformer(OpenAIPerformer):
         self.set_raw_response(completion.choices[0].message.content)
 
         # add the response to the conversation array
-        ChatCompletionPerformer.conversation_array.append({"role": "assistant", "content": completion.choices[0].message.content})
+        ConfigurableChatCompletionPerformer.conversation_array.append({"role": "assistant", "content": completion.choices[0].message.content})
         # if conversation_array is more than 10, keep the first item and remove the next
-        if len(ChatCompletionPerformer.conversation_array) > 10:
-            ChatCompletionPerformer.conversation_array = [ChatCompletionPerformer.conversation_array[0]] + ChatCompletionPerformer.conversation_array[-9:]
+        if len(ConfigurableChatCompletionPerformer.conversation_array) > 10:
+            ConfigurableChatCompletionPerformer.conversation_array = [ConfigurableChatCompletionPerformer.conversation_array[0]] + ConfigurableChatCompletionPerformer.conversation_array[-9:]
 
         return None
 
