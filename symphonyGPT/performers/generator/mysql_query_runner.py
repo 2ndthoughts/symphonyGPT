@@ -167,8 +167,8 @@ class MySQLQueryRunner(Generator):
             sql = text(f"CREATE DATABASE IF NOT EXISTS `{dataset_name}`")
             connection.execute(sql)
             # set max_allowed_packet
-            sql = text(f"SET GLOBAL max_allowed_packet=1073741824")
-            connection.execute(sql)
+            #sql = text(f"SET GLOBAL max_allowed_packet=1073741824") # RDS does not allow this command
+            #connection.execute(sql)
 
         engine.dispose()
 
