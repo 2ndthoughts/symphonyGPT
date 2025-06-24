@@ -11,8 +11,6 @@ class ConfigurableChatCompletionPerformer(OpenAIPerformer):
     def __init__(self):
         super().__init__()
         self.api_name = None
-        # don't restrict the output number of tokens
-        # self.set_model_attribute("max_tokens", 500) # maximium number of tokens to generate
 
     def set_api_name(self, api_name):
         self.api_name = api_name
@@ -67,6 +65,15 @@ class ConfigurableChatCompletionPerformer(OpenAIPerformer):
         ConfigurableChatCompletionPerformer.conversation_array.append({"role": "assistant", "content": completion.choices[0].message.content})
         # if conversation_array is more than 10, keep the first item and remove the next
         if len(ConfigurableChatCompletionPerformer.conversation_array) > 10:
+            ConfigurableChatCompletionPerformer.conversation_array = [ConfigurableChatCompletionPerformer.conversation_array[0]] + ConfigurableChatCompletionPerformer.conversation_array[-9:]
+
+        # get the maximum model context tokens for the model
+        model_name = self.get_model_attribute("model")
+        max_tokens = APIKeys().get_model_context_max_tokens(model_name)
+
+        # if the total number of tokens in the conversation array exceeds 1,047,576, remove the first item
+        total_tokens = sum(len(msg['content'].split()) for msg in ConfigurableChatCompletionPerformer.conversation_array)
+        if total_tokens > max_tokens:
             ConfigurableChatCompletionPerformer.conversation_array = [ConfigurableChatCompletionPerformer.conversation_array[0]] + ConfigurableChatCompletionPerformer.conversation_array[-9:]
 
         return None
