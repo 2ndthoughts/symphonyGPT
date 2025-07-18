@@ -73,8 +73,10 @@ class ConfigurableChatCompletionPerformer(OpenAIPerformer):
 
         # if the total number of tokens in the conversation array exceeds 1,047,576, remove the first item
         total_tokens = sum(len(msg['content'].split()) for msg in ConfigurableChatCompletionPerformer.conversation_array)
-        if total_tokens > max_tokens:
+        while total_tokens > max_tokens:
             ConfigurableChatCompletionPerformer.conversation_array = [ConfigurableChatCompletionPerformer.conversation_array[0]] + ConfigurableChatCompletionPerformer.conversation_array[-9:]
+            total_tokens = sum(
+                len(msg['content'].split()) for msg in ConfigurableChatCompletionPerformer.conversation_array)
 
         return None
 
