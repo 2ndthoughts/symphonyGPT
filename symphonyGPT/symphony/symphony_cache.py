@@ -6,6 +6,9 @@ from diskcache import Cache
 
 from symphonyGPT.symphony.util import Util
 
+# default cache expiration time
+TWO_DAYS=2*60*60*24 # 2 days in seconds
+
 
 def delete_old_cache_dirs():
     import os
@@ -66,12 +69,14 @@ class SymphonyCache:
             Util().debug_print(f"Cache directory {self.cache_dir} has been deleted.")
 
     def set(self, key, value):
-        self.cache.set(key, value)
+        self.cache.set(key, value, expire=TWO_DAYS)  # Set expiration to 1 day
 
     def get(self, key):
         answer = self.cache.get(key)
         if answer is None:
             return f"{key} not found"
+        else: # If the key exists, refresh its expiration time
+            self.cache.touch(key, expire=TWO_DAYS)  # Refresh expiration time
 
         return answer
 
