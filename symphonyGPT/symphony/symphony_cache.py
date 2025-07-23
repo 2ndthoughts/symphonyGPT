@@ -57,7 +57,7 @@ class SymphonyCache:
 
         self.cache = Cache(self.cache_dir)
         # Register the cleanup function to run on process exit
-        atexit.register(self.cleanup_cache_dir)
+        # atexit.register(self.cleanup_cache_dir)
 
     # Function to cleanup the cache directory
     def cleanup_cache_dir(self):
