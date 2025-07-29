@@ -1,6 +1,7 @@
 from symphonyGPT.performers.api_extractor.secondthoughts.wikipedia_extractor import WikipediaExtractor
 from symphonyGPT.performers.generator.pdf_generator import PDFGenerator
 from symphonyGPT.performers.generator.secondthoughts.prompt_context_generator import PromptContextGenerator
+from symphonyGPT.performers.language_model.configurable_model_performer import ConfigurableModelPerformer
 from symphonyGPT.performers.language_model.openai_performers.gpt_4 import Gpt4
 from symphonyGPT.performers.language_model.xai_performers.grok_beta import GrokBeta
 from symphonyGPT.symphony.movement import Movement
@@ -10,6 +11,15 @@ from symphonyGPT.symphony.symphony import Symphony
 # in this example, make sure to get an openai api key according to this page
 # https://platform.openai.com/account/api-keys and update the api_key in the file
 # symphonyGPT/performers/api_keys.py
+
+api_name = "openai"
+api_model_name = "gpt-4.1-mini"
+
+#api_name = "xai"
+#api_model_name = "grok-4-0709"
+#api_model_name = "grok-3-mini"
+
+config_performer = ConfigurableModelPerformer(api_name, api_model_name)
 
 def main() -> None:
     prompt = "how did the roman empire fall"
@@ -28,7 +38,7 @@ def main() -> None:
 
     m_summarize_generated_prompt = Movement(
         prompt_str="create a concise prompt from the following questions: '{}'",
-        performers=[GrokBeta()]
+        performers=[config_performer]
     )
 
     m_extract = Movement(
@@ -39,7 +49,7 @@ def main() -> None:
         prompt_str="Generate an article with a title based on '"
                    + prompt + " using content from the following list of articles and citing the "
                               "title, description, and article_url as a list in the end ': '{}' ",
-        performers=[GrokBeta()]
+        performers=[config_performer]
     )
 
     m_create_pdf = Movement(
