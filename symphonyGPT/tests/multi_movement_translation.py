@@ -15,18 +15,18 @@ def main() -> None:
 
     movement_chinese = Movement(
         performers=[Gpt4oMini()],
-        outcome_strategy=OutcomeStrategy(format="answer_only")
+        #outcome_strategy=OutcomeStrategy(format="answer_only")
     )
     movement_german = Movement(
         prompt_str="translate to German: {}",  # pass the result of the previous movement to the next movement using {}
         performers=[Gpt4oMini()],
-        outcome_strategy=OutcomeStrategy(format="answer_only")
+        #outcome_strategy=OutcomeStrategy(format="answer_only")
     )
 
     movement_french = Movement(
         prompt_str="translate to French: {}",
         performers=[Gpt4oMini()],
-        outcome_strategy=OutcomeStrategy(format="answer_only")
+        #outcome_strategy=OutcomeStrategy(format="answer_only")
     )
 
     movement_english = Movement(
