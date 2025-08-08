@@ -8,7 +8,7 @@ from symphonyGPT.symphony.util import Util
 class Movement:
 
     def __init__(self, prompt_str=None, performers=None, outcome_strategy=None, conductor=None, prompt_classifier=None,
-                 previous_prompt=None, previous_response=None, system_prompt=None, concurrently=True):
+                 previous_prompt=None, previous_response=None, system_prompt=None, concurrently=True, append_conversation=True):
         self.concurrent = concurrently  # 6 times faster when True but requires high throughput with API
 
         self.classifier = prompt_classifier
@@ -16,6 +16,8 @@ class Movement:
         self.prompt = Prompt()
         if prompt_str is not None:
             self.prompt.set_prompt(prompt_str)
+
+        self.append_conversation = append_conversation  # if True, appends the conversation to the prompt
 
         if system_prompt is not None:
             self.prompt.set_system_prompt(system_prompt)
@@ -90,6 +92,7 @@ class Movement:
 
     def process_output(self, current_response, performer):
         # perform deposits results in performer.__response_raw_text
+        self.prompt.set_append_conversation(self.append_conversation)
         performer.perform(self.prompt)
 
         outcome_meta = json.loads("{}")

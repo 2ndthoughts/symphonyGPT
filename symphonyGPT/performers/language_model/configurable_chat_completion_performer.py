@@ -61,8 +61,13 @@ class ConfigurableChatCompletionPerformer(OpenAIPerformer):
 
         self.set_raw_response(completion.choices[0].message.content)
 
-        # add the response to the conversation array
-        ConfigurableChatCompletionPerformer.conversation_array.append({"role": "assistant", "content": completion.choices[0].message.content})
+        if prompt.is_append_conversation():
+            # add the response to the conversation array
+            ConfigurableChatCompletionPerformer.conversation_array.append({"role": "assistant", "content": completion.choices[0].message.content})
+        else:
+            # pop the user prompt
+            ConfigurableChatCompletionPerformer.conversation_array.pop()
+
         # if conversation_array is more than 10, keep the first item and remove the next
         if len(ConfigurableChatCompletionPerformer.conversation_array) > 10:
             ConfigurableChatCompletionPerformer.conversation_array = [ConfigurableChatCompletionPerformer.conversation_array[0]] + ConfigurableChatCompletionPerformer.conversation_array[-9:]

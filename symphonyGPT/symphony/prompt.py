@@ -10,7 +10,14 @@ class Prompt:
         self.previous_response = None
         self.preferences = None
         self.outcome_strategy = None
+        self.append_conversation = True
         self.classifications = json.loads("{}")
+
+    def set_append_conversation(self, append):
+        self.append_conversation = append
+
+    def is_append_conversation(self):
+        return self.append_conversation
 
     def set_previous_prompt(self, prompt):
         self.previous_prompt = prompt
