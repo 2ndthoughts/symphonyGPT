@@ -1,6 +1,8 @@
+import logging
+
 import mysql.connector
 import pandas as pd
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text, inspect
 import sqlparse
 
 from symphonyGPT.performers.api_keys import APIKeys
@@ -192,11 +194,28 @@ class MySQLQueryRunner(Generator):
                 table_name = csv_file.split("/")[-1].split(".")[0]
                 print(f"Loading CSV file into table '{table_name}' ...")
 
+                db_inspector = inspect(engine)
+
+                if db_inspector.has_table(table_name):
+                    existing_cols = {c["name"] for c in db_inspector.get_columns(table_name, schema=dataset_name)}
+
+                    # Add any missing columns (e.g., 'reason') before inserting
+                    missing = [c for c in df.columns if c not in existing_cols]
+                    if missing:
+                        print("Adding missing columns: " + ", ".join(missing))
+                        with engine.begin() as conn:
+                            for c in missing:
+                                # Pick a type—TEXT is a safe default for free-form strings
+                                if dataset_name:
+                                    conn.execute(text(f"ALTER TABLE `{dataset_name}`.`{table_name}` ADD COLUMN `{c}` TEXT NULL"))
+                                else:
+                                    conn.execute(text(f"ALTER TABLE `{table_name}` ADD COLUMN `{c}` TEXT NULL"))
+
                 df.to_sql(table_name, con=engine, index=False, if_exists='append')
 
                 break  # no errors, so break out of the loop
             except Exception as e:
-                print(f"Error loading CSV file: {e}")
+                print(f"Error loading CSV file: {e}, {e.__cause__ if e.__cause__ else str(e)}")
                 # if the Exception contains the words "'utf-8' codec" then try 'latin1' encoding
                 if 'utf-8' in str(e):
                     print("Trying 'latin1' encoding ...", flush=True)
