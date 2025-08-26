@@ -1,3 +1,5 @@
+import logging
+
 import openai
 from openai import APIError, OpenAI
 
@@ -40,24 +42,35 @@ class ConfigurableChatCompletionPerformer(OpenAIPerformer):
             self.set_raw_response("Error: No API base URL found for xai")
             return None
 
-        # now add the user prompt
-        ConfigurableChatCompletionPerformer.conversation_array.append({"role": "user", "content": user_prompt})
-        try:
-            client = OpenAI(
-                api_key=api_key,
-                base_url=api_base_url
-            )
+        tries = 0
 
-            completion = client.chat.completions.create(
-                **self.get_model_attributes(),
-                messages=ConfigurableChatCompletionPerformer.conversation_array
-            )
-        except Exception as e:
-            error_str = str(e)
-            error_str = error_str.replace("\r", " ")
-            error_str = error_str.replace("\n", " ")
-            self.set_raw_response("Error: '" + error_str + "'")
-            return None
+        while tries < 3:
+            tries += 1
+            # now add the user prompt
+            ConfigurableChatCompletionPerformer.conversation_array.append({"role": "user", "content": user_prompt})
+            try:
+                client = OpenAI(
+                    api_key=api_key,
+                    base_url=api_base_url
+                )
+
+                completion = client.chat.completions.create(
+                    **self.get_model_attributes(),
+                    messages=ConfigurableChatCompletionPerformer.conversation_array
+                )
+            except Exception as e:
+                error_str = str(e)
+                error_str = error_str.replace("\r", " ")
+                error_str = error_str.replace("\n", " ")
+                self.set_raw_response("Error: '" + error_str + "'")
+
+                logging.debug(f"{error_str} retrying {tries}/3")
+
+                # pop 2 items from the conversation array (the user prompt and the assistant response)
+                ConfigurableChatCompletionPerformer.conversation_array.pop()
+                ConfigurableChatCompletionPerformer.conversation_array.pop()
+
+                #return None
 
         self.set_raw_response(completion.choices[0].message.content)
 
