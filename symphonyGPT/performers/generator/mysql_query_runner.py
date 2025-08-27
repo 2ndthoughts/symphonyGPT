@@ -14,9 +14,10 @@ from symphonyGPT.symphony.symphony_cache import SymphonyCache
 
 
 class MySQLQueryRunner(Generator):
-    def __init__(self, database="use_connection_string", connection_string=None):
+    def __init__(self, database="use_connection_string", connection_string=None, cache_seed="nobody"):
         super().__init__()
-        self.cache = SymphonyCache("/tmp/symphonyGPT_cache")
+        cache_dir = f"/tmp/symphonyGPT_cache/{cache_seed}"
+        self.cache = SymphonyCache(cache_dir)
         self.set_type("mysql_query_runner")
         self.conn_str = APIKeys().get_api_key("mysql_connection_string")
         if connection_string is not None:
