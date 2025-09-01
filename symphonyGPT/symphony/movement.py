@@ -1,5 +1,6 @@
 import json
 import concurrent.futures
+
 from symphonyGPT.performers.language_model.openai_performers.gpt_35_turbo_0301 import Gpt35Turbo0301
 from symphonyGPT.symphony.prompt import Prompt
 from symphonyGPT.symphony.util import Util
@@ -7,12 +8,18 @@ from symphonyGPT.symphony.util import Util
 
 class Movement:
 
-    def __init__(self, prompt_str=None, performers=None, outcome_strategy=None, conductor=None, prompt_classifier=None,
+    def __init__(self, name=None, prompt_str=None, performers=None, outcome_strategy=None, conductor=None, prompt_classifier=None,
                  previous_prompt=None, previous_response=None, system_prompt=None, concurrently=True, append_conversation=True):
         self.concurrent = concurrently  # 6 times faster when True but requires high throughput with API
 
         self.classifier = prompt_classifier
         self.util = Util()
+
+        if name is None:
+           self.name = "Movement"
+        else:
+           self.name = name
+
         self.prompt = Prompt()
         if prompt_str is not None:
             self.prompt.set_prompt(prompt_str)

@@ -6,8 +6,10 @@ from symphonyGPT.symphony.util import Util
 
 class Symphony:
 
-    def __init__(self, prompt_str=None, movements=None, null_answer_break=False):
+    def __init__(self, prompt_str=None, movements=None, null_answer_break=False, elapsed_time=None):
 
+        if elapsed_time is None:
+            elapsed_time = {}
         self.util = Util()
         self.start_time = None
         self.end_time = None
@@ -22,6 +24,8 @@ class Symphony:
         self.null_answer_break = null_answer_break
         self.enumerated_responses = ""
 
+        self.elapsed_time = elapsed_time
+
     def perform(self, prompt_str=None):
         self.start_time = timeit.default_timer()
 
@@ -30,6 +34,7 @@ class Symphony:
 
         movement_output = None
         for movement in self.movements:
+            movement_start_time = timeit.default_timer()
             self.util.debug_print(f"Symphony.perform() movement: {self.movements.index(movement)}")
             # if the movement has a prompt_str, override the symphony one
             if movement.prompt.get_prompt() is not None:
@@ -48,6 +53,11 @@ class Symphony:
             self.util.debug_print_line()
             self.util.debug_print(f"Symphony.perform() movement_output: {movement_output_formatted}\n")
             self.util.debug_print_line()
+
+            movement_end_time = timeit.default_timer()
+            movement_execution_time = movement_end_time - movement_start_time
+
+            self.elapsed_time[f"{movement.name}"] = movement_execution_time
 
             # if the movement returns a null answer, break
             if self.null_answer_break and (len(movement_output) == 0 or movement_output is None or
