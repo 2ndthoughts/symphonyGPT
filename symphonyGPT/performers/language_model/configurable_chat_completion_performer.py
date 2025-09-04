@@ -6,13 +6,16 @@ from openai import APIError, OpenAI
 from symphonyGPT.performers.api_keys import APIKeys
 from symphonyGPT.performers.language_model.openai_performers.openai_performer import OpenAIPerformer
 
-
 class ConfigurableChatCompletionPerformer(OpenAIPerformer):
     conversation_array = []
 
     def __init__(self):
         super().__init__()
         self.api_name = None
+        self.max_conversation_length = 10
+
+    def set_max_conversation_length(self, length):
+        self.max_conversation_length = length
 
     def set_api_name(self, api_name):
         self.api_name = api_name
@@ -66,9 +69,13 @@ class ConfigurableChatCompletionPerformer(OpenAIPerformer):
 
                 logging.debug(f"{error_str} retrying {tries}/3")
 
+                # pop until conversation array is empty
+                while len(ConfigurableChatCompletionPerformer.conversation_array) > 0:
+                    ConfigurableChatCompletionPerformer.conversation_array.pop()
+
                 # pop 2 items from the conversation array (the user prompt and the assistant response)
-                ConfigurableChatCompletionPerformer.conversation_array.pop()
-                ConfigurableChatCompletionPerformer.conversation_array.pop()
+                #ConfigurableChatCompletionPerformer.conversation_array.pop()
+                #ConfigurableChatCompletionPerformer.conversation_array.pop()
 
                 #return None
 
@@ -82,7 +89,7 @@ class ConfigurableChatCompletionPerformer(OpenAIPerformer):
             ConfigurableChatCompletionPerformer.conversation_array.pop()
 
         # if conversation_array is more than 10, keep the first item and remove the next
-        if len(ConfigurableChatCompletionPerformer.conversation_array) > 10:
+        if len(ConfigurableChatCompletionPerformer.conversation_array) > self.max_conversation_length:
             ConfigurableChatCompletionPerformer.conversation_array = [ConfigurableChatCompletionPerformer.conversation_array[0]] + ConfigurableChatCompletionPerformer.conversation_array[-9:]
 
         # get the maximum model context tokens for the model
@@ -97,9 +104,3 @@ class ConfigurableChatCompletionPerformer(OpenAIPerformer):
                 len(msg['content'].split()) for msg in ConfigurableChatCompletionPerformer.conversation_array)
 
         return None
-
-    def set_model_attribute(self, key, value):
-        super().set_model_attribute(key, value)
-
-    def get_model_attribute(self, key):
-        return super().get_model_attribute(key)
