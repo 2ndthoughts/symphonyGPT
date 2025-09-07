@@ -1,7 +1,5 @@
 import logging
-
-import openai
-from openai import APIError, OpenAI
+from openai import OpenAI
 
 from symphonyGPT.performers.api_keys import APIKeys
 from symphonyGPT.performers.language_model.openai_performers.openai_performer import OpenAIPerformer
@@ -46,7 +44,7 @@ class ConfigurableChatCompletionPerformer(OpenAIPerformer):
             return None
 
         tries = 0
-
+        completion = None
         while tries < 3:
             tries += 1
             # now add the user prompt
@@ -72,12 +70,6 @@ class ConfigurableChatCompletionPerformer(OpenAIPerformer):
                 # pop until conversation array is empty
                 while len(ConfigurableChatCompletionPerformer.conversation_array) > 0:
                     ConfigurableChatCompletionPerformer.conversation_array.pop()
-
-                # pop 2 items from the conversation array (the user prompt and the assistant response)
-                #ConfigurableChatCompletionPerformer.conversation_array.pop()
-                #ConfigurableChatCompletionPerformer.conversation_array.pop()
-
-                #return None
 
         self.set_raw_response(completion.choices[0].message.content)
 
