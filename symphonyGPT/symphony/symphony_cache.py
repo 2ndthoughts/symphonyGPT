@@ -68,8 +68,11 @@ class SymphonyCache:
             shutil.rmtree(self.cache_dir)
             Util().debug_print(f"Cache directory {self.cache_dir} has been deleted.")
 
-    def set(self, key, value):
-        self.cache.set(key, value, expire=TWO_DAYS)  # Set expiration to 1 day
+    def set(self, key, value, expire_seconds=None):
+        if expire_seconds is not None:
+            self.cache.set(key, value, expire=expire_seconds)
+        else:
+            self.cache.set(key, value, expire=TWO_DAYS)  # Set expiration to 1 day
 
     def get(self, key):
         answer = self.cache.get(key)
