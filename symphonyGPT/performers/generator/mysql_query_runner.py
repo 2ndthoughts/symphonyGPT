@@ -26,6 +26,7 @@ class MySQLQueryRunner(Generator):
         # Parse the connection string
         self.mysql_params = parse_mysql_connection_string(self.conn_str)
         self.database = database
+        self.executed_sql = None
 
     def is_database_exists(self, database_name):
         # Replace these with your connection details
@@ -268,6 +269,8 @@ class MySQLQueryRunner(Generator):
             cursor.execute("SET SESSION sql_mode = REPLACE(@@sql_mode, 'ONLY_FULL_GROUP_BY', '');")
             cursor.execute(sql)
 
+            self.executed_sql = sql
+
             # Retrieve column headers
             column_headers = [i[0] for i in cursor.description]
 
@@ -288,6 +291,10 @@ class MySQLQueryRunner(Generator):
         except mysql.connector.Error as e:
             answer = f"Error: {e}"
             self.cache.set("SQLQueryRunner.error", f"Error: {e}")
+        except Exception as e:
+            answer = f"Error: {e}"
+            self.cache.set("SQLQueryRunner.error", f"Error: {e}")
+            logging.error(f"Unexpected error: {e}")
         finally:
             if conn.is_connected():
                 conn.close()
