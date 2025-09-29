@@ -26,7 +26,7 @@ class Symphony:
 
         self.elapsed_time = elapsed_time
 
-    def perform(self, prompt_str=None, live_log_func=None):
+    def perform(self, prompt_str=None, live_log_func=None, flash_message_func=None):
         self.start_time = timeit.default_timer()
 
         if prompt_str is None:
@@ -39,6 +39,9 @@ class Symphony:
 
             if live_log_func is not None:
                 live_log_func(f"Symphony performing movement: {movement.name}")
+
+            if flash_message_func is not None:
+                flash_message_func(f"{movement.name}")
 
             # if the movement has a prompt_str, override the symphony one
             if movement.prompt.get_prompt() is not None:
