@@ -26,7 +26,7 @@ class Symphony:
 
         self.elapsed_time = elapsed_time
 
-    def perform(self, prompt_str=None):
+    def perform(self, prompt_str=None, live_log_func=None):
         self.start_time = timeit.default_timer()
 
         if prompt_str is None:
@@ -36,6 +36,10 @@ class Symphony:
         for movement in self.movements:
             movement_start_time = timeit.default_timer()
             self.util.debug_print(f"Symphony.perform() movement: {self.movements.index(movement)}")
+
+            if live_log_func is not None:
+                live_log_func(f"Symphony performing movement: {movement.name}")
+
             # if the movement has a prompt_str, override the symphony one
             if movement.prompt.get_prompt() is not None:
                 prompt_str = movement.prompt.get_prompt()
@@ -75,5 +79,5 @@ class Symphony:
         self.end_time = timeit.default_timer()
         execution_time = self.end_time - self.start_time
 
-        self.util.debug_print(f"The code executed in {execution_time: .2f} seconds")
+        self.util.debug_print(f"The symphony executed in {execution_time: .2f} seconds")
         return movement_output
