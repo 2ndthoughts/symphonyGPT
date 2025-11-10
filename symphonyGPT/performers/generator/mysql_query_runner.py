@@ -4,6 +4,7 @@ import mysql.connector
 import pandas as pd
 from sqlalchemy import create_engine, text, inspect
 import sqlparse
+from tqdm import tqdm
 
 from symphonyGPT.performers.api_keys import APIKeys
 from symphonyGPT.performers.generator.generator import Generator
@@ -158,6 +159,70 @@ class MySQLQueryRunner(Generator):
         # Close the database connection
         db.close()
 
+    def get_table_columns(self, engine, table_name):
+        # if table_name does not exist, return empty set
+        with engine.connect() as conn:
+            if not engine.dialect.has_table(conn, table_name):
+                return None
+
+        inspector = inspect(engine)
+        return {col['name'] for col in inspector.get_columns(table_name)}
+
+    def drop_unknown_columns(self, df_chunk, table_name, engine, **kwargs):
+        known_cols = self.get_table_columns(engine, table_name)
+        if known_cols is None:
+            return df_chunk
+
+        valid_cols = [c for c in df_chunk.columns if c in known_cols]
+        df_filtered = df_chunk[valid_cols]
+
+        if len(valid_cols) < len(df_chunk.columns):
+            dropped = set(df_chunk.columns) - set(valid_cols)
+            print(f"Dropped unknown columns: {dropped}")
+
+        return df_filtered
+
+    def load_dataset(self, df, table_name, engine, chunksize=5000, drop_if_exists=True):
+
+        # drop table if exists
+        if drop_if_exists:
+            with engine.connect() as conn:
+                conn.execute(text(f"DROP TABLE IF EXISTS `{table_name}`;"))
+                conn.commit()
+
+        total_rows = len(df)
+        chunks = range(0, total_rows, chunksize)
+
+        num_rows = 0
+        processed = 0
+        UPDATE_EVERY = 10000
+        with tqdm(total=total_rows, desc="Inserting rows", unit="row") as pbar:
+            for start in chunks:
+                end = start + chunksize
+                chunk = df.iloc[start:end]
+                # chunk = self.drop_unknown_columns(chunk, table_name, engine)
+
+                num_rows += chunk.to_sql(
+                    name=table_name,
+                    con=engine,
+                    if_exists='append',
+                    index=False,
+                    method='multi',  # Still fast!
+                    # No custom method → no signature error
+                )
+
+                processed += len(chunk)
+                if processed % UPDATE_EVERY == 0:
+                    pbar.update(UPDATE_EVERY)
+                    percentage = pbar.n / pbar.total * 100
+                    print(f' {table_name} ({percentage:.2f}%) inserted')
+
+                #pbar.update(len(chunk))
+                #percentage = pbar.n / pbar.total * 100
+                #print(f' {table_name} ({percentage:.2f}%) inserted')
+
+        return num_rows
+
     def load_csv(self, csv_file, dataset_name):
         # Replace these with your connection details
         username = self.mysql_params['user']
@@ -196,24 +261,27 @@ class MySQLQueryRunner(Generator):
                 table_name = csv_file.split("/")[-1].split(".")[0]
                 print(f"Loading CSV file into table '{table_name}' ...")
 
-                db_inspector = inspect(engine)
+                add_missing_columns = True
+                if add_missing_columns:
+                    db_inspector = inspect(engine)
 
-                if db_inspector.has_table(table_name):
-                    existing_cols = {c["name"] for c in db_inspector.get_columns(table_name, schema=dataset_name)}
+                    if db_inspector.has_table(table_name):
+                        existing_cols = {c["name"] for c in db_inspector.get_columns(table_name, schema=dataset_name)}
 
-                    # Add any missing columns (e.g., 'reason') before inserting
-                    missing = [c for c in df.columns if c not in existing_cols]
-                    if missing:
-                        print("Adding missing columns: " + ", ".join(missing))
-                        with engine.begin() as conn:
-                            for c in missing:
-                                # Pick a type—TEXT is a safe default for free-form strings
-                                if dataset_name:
-                                    conn.execute(text(f"ALTER TABLE `{dataset_name}`.`{table_name}` ADD COLUMN `{c}` TEXT NULL"))
-                                else:
-                                    conn.execute(text(f"ALTER TABLE `{table_name}` ADD COLUMN `{c}` TEXT NULL"))
+                        # Add any missing columns (e.g., 'reason') before inserting
+                        missing = [c for c in df.columns if c not in existing_cols]
+                        if missing:
+                            print("Adding missing columns: " + ", ".join(missing))
+                            with engine.begin() as conn:
+                                for c in missing:
+                                    # Pick a type—TEXT is a safe default for free-form strings
+                                    if dataset_name:
+                                        conn.execute(text(f"ALTER TABLE `{dataset_name}`.`{table_name}` ADD COLUMN `{c}` TEXT NULL"))
+                                    else:
+                                        conn.execute(text(f"ALTER TABLE `{table_name}` ADD COLUMN `{c}` TEXT NULL"))
 
-                df.to_sql(table_name, con=engine, index=False, if_exists='append')
+                # df.to_sql(table_name, con=engine, index=False, if_exists='append')
+                self.load_dataset(df, table_name, engine, chunksize=100, drop_if_exists=False)
 
                 break  # no errors, so break out of the loop
             except Exception as e:
