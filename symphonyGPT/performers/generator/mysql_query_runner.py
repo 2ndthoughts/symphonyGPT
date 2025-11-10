@@ -282,6 +282,7 @@ class MySQLQueryRunner(Generator):
 
                 # df.to_sql(table_name, con=engine, index=False, if_exists='append')
                 self.load_dataset(df, table_name, engine, chunksize=100, drop_if_exists=False)
+                print("CSV file has been loaded successfully.")
 
                 break  # no errors, so break out of the loop
             except Exception as e:
