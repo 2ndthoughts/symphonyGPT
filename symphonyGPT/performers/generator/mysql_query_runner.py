@@ -259,7 +259,7 @@ class MySQLQueryRunner(Generator):
 
                 # parse table_name from csv_file
                 table_name = csv_file.split("/")[-1].split(".")[0]
-                print(f"Loading CSV file into table '{table_name}' ...")
+                print(f"Loading CSV file {csv_file} into table '{table_name}' ...")
 
                 add_missing_columns = True
                 if add_missing_columns:
