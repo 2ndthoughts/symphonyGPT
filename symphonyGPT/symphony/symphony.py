@@ -50,6 +50,9 @@ class Symphony:
             if "{}" in prompt_str and movement_output is not None:
                 try:
                     prompt_str = prompt_str.format(movement_output)
+                    # the first 100 characters of the prompt_str
+                    short_prompt_str = prompt_str[:500].replace("\n", " ") + "..." if len(prompt_str) > 500 else prompt_str
+                    live_log_func(f"Symphony.perform() formatted prompt_str: {short_prompt_str}")
                 except Exception as e:
                     self.util.debug_print(f"Symphony.perform() error: {e}")
                     prompt_str = prompt_str.replace("{}", "")
@@ -83,4 +86,5 @@ class Symphony:
         execution_time = self.end_time - self.start_time
 
         self.util.debug_print(f"The symphony executed in {execution_time: .2f} seconds")
+        live_log_func(f"The symphony executed in {execution_time: .2f} seconds")
         return movement_output
