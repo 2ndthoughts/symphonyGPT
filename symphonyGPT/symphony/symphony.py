@@ -86,5 +86,4 @@ class Symphony:
         execution_time = self.end_time - self.start_time
 
         self.util.debug_print(f"The symphony executed in {execution_time: .2f} seconds")
-        live_log_func(f"The symphony executed in {execution_time: .2f} seconds")
         return movement_output
