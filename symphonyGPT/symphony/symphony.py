@@ -38,7 +38,7 @@ class Symphony:
             self.util.debug_print(f"Symphony.perform() movement: {self.movements.index(movement)}")
 
             if live_log_func is not None:
-                live_log_func(f"Symphony performing movement: {movement.name}")
+                live_log_func(f"Symphony performing movement: {movement.name}", "symphony")
 
             if flash_message_func is not None:
                 flash_message_func(f"{movement.name}")
@@ -49,10 +49,15 @@ class Symphony:
 
             if "{}" in prompt_str and movement_output is not None:
                 try:
+                    # if movement_output is JSON, get the field value of "answer" or else just the whole string
+                    if isinstance(movement_output, list):
+                        if "answer" in movement_output[0]:
+                            movement_output = movement_output[0]["answer"]
+
                     prompt_str = prompt_str.format(movement_output)
                     # the first 100 characters of the prompt_str
                     short_prompt_str = prompt_str[:500].replace("\n", " ") + "..." if len(prompt_str) > 500 else prompt_str
-                    live_log_func(f"Symphony.perform() formatted prompt_str: {short_prompt_str}")
+                    live_log_func(f"Symphony.perform() formatted prompt_str: {short_prompt_str}", "symphony")
                 except Exception as e:
                     self.util.debug_print(f"Symphony.perform() error: {e}")
                     prompt_str = prompt_str.replace("{}", "")
