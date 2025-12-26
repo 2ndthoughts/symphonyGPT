@@ -65,9 +65,8 @@ class Symphony:
             movement_output = movement.perform(prompt_str, movement_output)
             self.enumerated_responses = f"{self.enumerated_responses}{movement_output}\n"
             movement_output_formatted = json.dumps(movement_output, indent=4)
-            self.util.debug_print_line()
-            self.util.debug_print(f"Symphony.perform() movement_output: {movement_output_formatted}\n")
-            self.util.debug_print_line()
+            short_movement_output = movement_output_formatted[:500].replace("\n", " ") + "..." if len(movement_output_formatted) > 500 else movement_output_formatted
+            live_log_func(f"Symphony.perform() movement_output: {short_movement_output}", category="symphony")
 
             movement_end_time = timeit.default_timer()
             movement_execution_time = movement_end_time - movement_start_time
@@ -81,7 +80,7 @@ class Symphony:
                                            movement_output[0]["answer"] == "" or
                                            movement_output[0]["answer"] == "{}" or
                                            movement_output[0]["answer"] is None):
-                self.util.debug_print("Symphony.perform() null answer break, there is no answer")
+                live_log_func("Symphony.perform() null answer break, there is no answer", category="symphony")
 
                 # if the movement returns a null answer, break
                 movement_output = [{"answer": "There is no answer"}]
@@ -90,5 +89,5 @@ class Symphony:
         self.end_time = timeit.default_timer()
         execution_time = self.end_time - self.start_time
 
-        self.util.debug_print(f"The symphony executed in {execution_time: .2f} seconds")
+        live_log_func(f"The symphony executed in {execution_time: .2f} seconds", category="symphony")
         return movement_output
