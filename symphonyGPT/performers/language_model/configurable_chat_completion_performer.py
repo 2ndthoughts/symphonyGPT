@@ -71,7 +71,10 @@ class ConfigurableChatCompletionPerformer(OpenAIPerformer):
                 while len(ConfigurableChatCompletionPerformer.conversation_array) > 0:
                     ConfigurableChatCompletionPerformer.conversation_array.pop()
 
-        self.set_raw_response(completion.choices[0].message.content)
+        if completion is None:
+            self.set_raw_response("Error: Unable to get response from API")
+        else:
+            self.set_raw_response(completion.choices[0].message.content)
 
         if prompt.is_append_conversation():
             # add the response to the conversation array
