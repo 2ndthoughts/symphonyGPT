@@ -83,6 +83,12 @@ class SymphonyCache:
 
         return answer
 
+    def touch(self, key, expire=TWO_DAYS):
+        self.cache.touch(key, expire=expire)  # Refresh expiration time
+
+    def get_all_keys(self):
+        return list(self.cache.iterkeys())
+
     def delete(self, key):
         self.cache.delete(key)
 
