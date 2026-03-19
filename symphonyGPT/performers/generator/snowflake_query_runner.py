@@ -115,7 +115,8 @@ class SnowflakeQueryRunner(Generator):
                 f"Connected to the database '{database_name}' on {self.account} as {self.user}")
             # Create a cursor object
             cursor = conn.cursor()
-            cursor.execute("ALTER SESSION SET STATEMENT_TIMEOUT_IN_SECONDS = 600") # set query timeout to 10 minutes for testing
+            cursor.execute("ALTER SESSION SET STATEMENT_TIMEOUT_IN_SECONDS = 600")
+            cursor.execute(f"USE {database_name}.{self.schema}")# set query timeout to 10 minutes for testing
 
             cursor.execute(sql)
 

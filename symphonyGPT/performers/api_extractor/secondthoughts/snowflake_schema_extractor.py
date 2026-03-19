@@ -128,7 +128,8 @@ class SnowflakeSchemaExtractor(APIExtractor):
 
             # Executing the DESCRIBE command
             if self.table_name == "all":
-                cursor.execute(f"SHOW OBJECTS")
+                cursor.execute(f"USE {database_name}.{self.schema};")
+                cursor.execute(f"SHOW OBJECTS;")
                 rows = cursor.fetchall()
                 for row in rows:
                     table_name = row[1]
