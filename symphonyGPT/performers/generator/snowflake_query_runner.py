@@ -128,7 +128,22 @@ class SnowflakeQueryRunner(Generator):
 
             results = []
             for row in rows:
-                row_dict = dict(zip(column_headers, row))
+                row_dict = {}
+                for header, value in zip(column_headers, row):
+                    if isinstance(value, str):
+                        # Option A: remove ' completely
+                        # cleaned = value.replace("'", "")
+
+                        # Option B: replace ' with safe alternatives
+                        cleaned = value.replace("'", "’")    # curly quote
+                        cleaned = cleaned.replace('"', "’’")   # curly quote
+                        # cleaned = value.replace("'", "\\'")   # escaped for later SQL/string use
+                        # cleaned = value.replace("'", "''")    # MySQL string literal escaping
+
+                        row_dict[header] = cleaned
+                    else:
+                        row_dict[header] = value
+
                 results.append(row_dict)
 
             answer = '\n'.join([str(row) for row in results])
