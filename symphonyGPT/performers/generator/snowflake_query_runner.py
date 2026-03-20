@@ -16,9 +16,10 @@ from symphonyGPT.symphony.symphony_cache import SymphonyCache
 
 
 class SnowflakeQueryRunner(Generator):
-    def __init__(self, database="use_connection_string", connection_string=None):
+    def __init__(self, database="use_connection_string", connection_string=None, cache_seed="nobody"):
         super().__init__()
-        self.cache = SymphonyCache("/tmp/symphonyGPT_cache")
+        cache_dir = f"/tmp/symphonyGPT_cache/{cache_seed}"
+        self.cache = SymphonyCache(cache_dir)
 
         # snowflake://my_user:my_password@xy12345.us-east-1.aws/?warehouse=my_warehouse&db=my_database&schema=my_schema&role=my_role
         if connection_string is not None:

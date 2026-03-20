@@ -45,8 +45,9 @@ def is_connected(conn):
 
 
 class SnowflakeSchemaExtractor(APIExtractor):
-    def __init__(self, database="use_connection_string", table_name="all", connection_string=None):
+    def __init__(self, database="use_connection_string", table_name="all", example_records=0, connection_string=None):
         super().__init__()
+        self.example_records = example_records
         self.cache = SymphonyCache("/tmp/symphonyGPT_cache")
 
         self.table_name = table_name
@@ -163,6 +164,8 @@ class SnowflakeSchemaExtractor(APIExtractor):
                     create_table_query = create_table_query.rstrip(",\n") + "\n);"
 
                     answer += create_table_query + "\n"
+
+                    # TODO example_records are not supported yet because of the complexity of Snowflake's VARIANT data type and the fact that it can contain nested structures.
 
                     # get table stats
                     # table_stats_query = (f"SELECT COUNT(*) AS record_count, AVG(LENGTH(TO_JSON(OBJECT_CONSTRUCT(*)))) AS "
