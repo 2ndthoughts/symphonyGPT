@@ -10,13 +10,25 @@ class ConfigurableChatCompletionPerformer(OpenAIPerformer):
     def __init__(self):
         super().__init__()
         self.api_name = None
-        self.max_conversation_length = 10
+        self.max_conversation_length = 1 # default
+        self.max_tokens = 256000 # default
+        self.api_key = None
+        self.api_base_url = None
+
+    def set_max_tokens(self, max_tokens):
+        self.max_tokens = max_tokens
 
     def set_max_conversation_length(self, length):
         self.max_conversation_length = length
 
     def set_api_name(self, api_name):
         self.api_name = api_name
+
+    def set_api_key(self, api_key):
+        self.api_key = api_key
+
+    def set_api_base_url(self, api_base_url):
+        self.api_base_url = api_base_url
 
     def perform(self, prompt):
         user_prompt = prompt.get_prompt()
@@ -33,15 +45,17 @@ class ConfigurableChatCompletionPerformer(OpenAIPerformer):
             ConfigurableChatCompletionPerformer.conversation_array.append({"role": "user", "content": prompt.previous_prompt})
             ConfigurableChatCompletionPerformer.conversation_array.append({"role": "assistant", "content": prompt.previous_response})
 
-        api_key = APIKeys().get_api_key(self.api_name)
-        if api_key is None:
-            self.set_raw_response("Error: No API key found for xai")
-            return None
+        if self.api_key is None:
+            self.api_key = APIKeys().get_api_key(self.api_name)
+            if self.api_key is None:
+                self.set_raw_response("Error: No API key found for xai")
+                return None
 
-        api_base_url = APIKeys().get_api_base_url(self.api_name)
-        if api_base_url is None:
-            self.set_raw_response("Error: No API base URL found for xai")
-            return None
+        if self.api_base_url is None:
+            self.api_base_url = APIKeys().get_api_base_url(self.api_name)
+            if self.api_base_url is None:
+                self.set_raw_response("Error: No API base URL found for xai")
+                return None
 
         tries = 0
         completion = None
@@ -51,8 +65,8 @@ class ConfigurableChatCompletionPerformer(OpenAIPerformer):
             ConfigurableChatCompletionPerformer.conversation_array.append({"role": "user", "content": user_prompt})
             try:
                 client = OpenAI(
-                    api_key=api_key,
-                    base_url=api_base_url
+                    api_key=self.api_key,
+                    base_url=self.api_base_url
                 )
 
                 completion = client.chat.completions.create(
@@ -90,6 +104,8 @@ class ConfigurableChatCompletionPerformer(OpenAIPerformer):
         # get the maximum model context tokens for the model
         model_name = self.get_model_attribute("model")
         max_tokens = APIKeys().get_model_context_max_tokens(model_name)
+        if self.max_tokens is not None and max_tokens is not None and max_tokens < self.max_tokens:
+            max_tokens = self.max_tokens
 
         # if the total number of tokens in the conversation array exceeds 1,047,576, remove the first item
         total_tokens = sum(len(msg['content'].split()) for msg in ConfigurableChatCompletionPerformer.conversation_array)
