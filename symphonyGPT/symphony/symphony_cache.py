@@ -90,7 +90,7 @@ class SymphonyCache:
         return list(self.cache.iterkeys())
 
     def delete(self, key):
-        self.cache.delete(key)
+        return self.cache.delete(key, True)
 
     def clear(self):
         self.cache.clear()
