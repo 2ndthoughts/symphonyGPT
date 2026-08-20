@@ -1,3 +1,4 @@
+import json
 import sys
 
 import mysql.connector
@@ -25,17 +26,85 @@ class MySQLSchemaExtractor(APIExtractor):
         self.example_records = example_records
         self.cache = SymphonyCache("/tmp/symphonyGPT_cache")
 
+    def _quote_ident(self, name):
+        return '`' + str(name).replace('`', '``') + '`'
+
+    def _table_status_map(self, cursor, table_name="all"):
+        if table_name == "all":
+            cursor.execute("SHOW TABLE STATUS")
+        else:
+            cursor.execute("SHOW TABLE STATUS WHERE Name = %s", (table_name,))
+
+        status = {}
+        for row in cursor.fetchall():
+            status[row[0]] = {
+                "name": row[0],
+                "engine": row[1],
+                "row_count": int(row[4]) if row[4] is not None else 0,
+                "data_length": int(row[6]) if row[6] is not None else 0,
+                "collation": row[14] if len(row) > 14 else "",
+                "comment": row[17] if len(row) > 17 and row[17] else "",
+            }
+        return status
+
+    def _get_columns(self, cursor, table_name):
+        cursor.execute(f"SHOW FULL COLUMNS FROM {self._quote_ident(table_name)}")
+        columns = []
+        for col in cursor.fetchall():
+            columns.append({
+                "name": col[0],
+                "type": col[1],
+                "collation": col[2],
+                "nullable": col[3] == "YES",
+                "key": col[4] or "",
+                "default": None if col[5] is None else str(col[5]),
+                "extra": col[6] or "",
+                "comment": col[8] if len(col) > 8 and col[8] else "",
+            })
+        return columns
+
+    def _collect_table(self, cursor, table_name, status_map):
+        quoted = self._quote_ident(table_name)
+        cursor.execute(f"SHOW CREATE TABLE {quoted}")
+        create_table_rows = cursor.fetchall()
+        create_sql = create_table_rows[0][1] if create_table_rows else ""
+
+        status = status_map.get(table_name, {})
+        table_meta = {
+            "name": table_name,
+            "engine": status.get("engine"),
+            "row_count": status.get("row_count", 0),
+            "data_length": status.get("data_length", 0),
+            "collation": status.get("collation", ""),
+            "comment": status.get("comment", ""),
+            "create_sql": create_sql,
+            "columns": self._get_columns(cursor, table_name),
+        }
+
+        sample_text = ""
+        if self.example_records > 0:
+            cursor.execute(f"SELECT * FROM {quoted} LIMIT {int(self.example_records)}")
+            example_rows = cursor.fetchall()
+            field_names = [i[0] for i in cursor.description] if cursor.description else []
+            sample_text += f"\n\nSample records for table {table_name} and its fields:\n"
+            for example_row in example_rows:
+                example_dict = dict(zip(field_names, example_row))
+                sample_text += str(example_dict) + "\n"
+
+        return table_meta, create_sql, sample_text
 
     def perform(self, prompt):
         # ignore prompt, not used
 
         answer = ""
+        tables_meta = []
 
         # Connect to the MySQL Database
         conn = None
         try:
             # reset the cache for errors
             self.cache.delete("SQLSchemaExtractor.error")
+            self.cache.delete("SQLSchemaExtractor.tables")
             database_name = get_database_name(self.mysql_params, self.database)
 
             try:
@@ -61,41 +130,29 @@ class MySQLSchemaExtractor(APIExtractor):
                 f"Connected to the database '{database_name}' on {self.mysql_params['host']} as {self.mysql_params['user']}")
             # Create a cursor object
             cursor = conn.cursor()
+            status_map = self._table_status_map(cursor, self.table_name)
 
             # Executing the DESCRIBE command
             if self.table_name == "all":
-                cursor.execute(f"SHOW TABLES")
+                cursor.execute("SHOW TABLES")
                 rows = cursor.fetchall()
                 for row in rows:
-                    cursor.execute(f"SHOW CREATE TABLE `{row[0]}`")
-                    create_table_rows = cursor.fetchall()
-                    for create_table_row in create_table_rows:
-                        answer += create_table_row[1]
-
-                        # if example_records > 0, get example records for each table limit to example_records
-                        if self.example_records > 0:
-                            cursor.execute(f"SELECT * FROM `{row[0]}` LIMIT {self.example_records}")
-                            example_rows = cursor.fetchall()
-                            # get the field names from the cursor description
-                            field_names = [i[0] for i in cursor.description]
-
-                            answer += f"\n\nSample records for table {row[0]} and its fields:\n"
-                            for example_row in example_rows:
-                                # combine the field names and example row into a dictionary
-                                example_dict = dict(zip(field_names, example_row))
-                                answer += str(example_dict) + "\n"
-
+                    table_meta, create_sql, sample_text = self._collect_table(cursor, row[0], status_map)
+                    tables_meta.append(table_meta)
+                    answer += create_sql
+                    answer += sample_text
                     answer += "\n\n"
             else:
-                cursor.execute(f"SHOW CREATE TABLE `{self.table_name}`")
-
-            # Fetch all the rows
-            rows = cursor.fetchall()
-
-            for row in rows:
-                answer += row[1]
+                table_meta, create_sql, sample_text = self._collect_table(cursor, self.table_name, status_map)
+                tables_meta.append(table_meta)
+                answer += create_sql
+                answer += sample_text
 
             self.cache.set("SQLSchemaExtractor.schema", answer)
+            self.cache.set("SQLSchemaExtractor.tables", json.dumps({
+                "database": database_name,
+                "tables": tables_meta,
+            }, default=str))
         finally:
             if conn is not None and conn.is_connected():
                 conn.close()

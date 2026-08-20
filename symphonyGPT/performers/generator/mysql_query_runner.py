@@ -1,4 +1,7 @@
+import json
 import logging
+from datetime import date, datetime, timedelta
+from decimal import Decimal
 
 import mysql.connector
 import pandas as pd
@@ -28,6 +31,26 @@ class MySQLQueryRunner(Generator):
         self.mysql_params = parse_mysql_connection_string(self.conn_str)
         self.database = database
         self.executed_sql = None
+
+    def serialize_sql_value(self, value):
+        if value is None:
+            return None
+        if isinstance(value, datetime):
+            return value.isoformat(sep=' ', timespec='seconds')
+        if isinstance(value, date):
+            return value.isoformat()
+        if isinstance(value, timedelta):
+            return str(value)
+        if isinstance(value, Decimal):
+            return str(value)
+        if isinstance(value, bytes):
+            try:
+                return value.decode('utf-8')
+            except UnicodeDecodeError:
+                return value.hex()
+        if isinstance(value, (int, float, bool, str)):
+            return value
+        return str(value)
 
     def is_database_exists(self, database_name):
         # Replace these with your connection details
@@ -340,16 +363,20 @@ class MySQLQueryRunner(Generator):
 
             self.executed_sql = sql
 
-            # Retrieve column headers
-            column_headers = [i[0] for i in cursor.description]
-
-            # Fetch all the rows
-            rows = cursor.fetchall()
+            if cursor.description is None:
+                column_headers = []
+                rows = []
+            else:
+                column_headers = [i[0] for i in cursor.description]
+                rows = cursor.fetchall()
 
             results = []
+            serialized_results = []
             for row in rows:
                 row_dict = {}
+                serialized_row = {}
                 for header, value in zip(column_headers, row):
+                    serialized_row[header] = self.serialize_sql_value(value)
                     if isinstance(value, str):
                         # Option A: remove ' completely
                         # cleaned = value.replace("'", "")
@@ -365,6 +392,7 @@ class MySQLQueryRunner(Generator):
                         row_dict[header] = value
 
                 results.append(row_dict)
+                serialized_results.append(serialized_row)
 
             answer = '\n'.join([str(row) for row in results])
 
@@ -372,12 +400,18 @@ class MySQLQueryRunner(Generator):
                 answer = "No results returned"
 
             self.cache.set("SQLQueryRunner.result", answer)
+            self.cache.set("SQLQueryRunner.columns", json.dumps(column_headers))
+            self.cache.set("SQLQueryRunner.result_rows", json.dumps(serialized_results))
         except mysql.connector.Error as e:
             answer = f"Error: {e}"
             self.cache.set("SQLQueryRunner.error", f"Error: {e}")
+            self.cache.set("SQLQueryRunner.columns", json.dumps([]))
+            self.cache.set("SQLQueryRunner.result_rows", json.dumps([]))
         except Exception as e:
             answer = f"Error: {e}"
             self.cache.set("SQLQueryRunner.error", f"Error: {e}")
+            self.cache.set("SQLQueryRunner.columns", json.dumps([]))
+            self.cache.set("SQLQueryRunner.result_rows", json.dumps([]))
             logging.error(f"Unexpected error: {e}")
         finally:
             if conn.is_connected():
