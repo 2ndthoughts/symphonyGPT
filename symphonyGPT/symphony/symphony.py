@@ -62,7 +62,8 @@ class Symphony:
                     self.util.debug_print(f"Symphony.perform() error: {e}")
                     prompt_str = prompt_str.replace("{}", "")
 
-            movement_output = movement.perform(prompt_str, movement_output)
+            movement_output = movement.perform(
+                prompt_str, movement_output, flash_message_func=flash_message_func)
             self.enumerated_responses = f"{self.enumerated_responses}{movement_output}\n"
             movement_output_formatted = json.dumps(movement_output, indent=4)
             short_movement_output = movement_output_formatted[:500].replace("\n", " ") + "..." if len(movement_output_formatted) > 500 else movement_output_formatted

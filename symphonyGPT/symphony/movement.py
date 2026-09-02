@@ -47,12 +47,12 @@ class Movement:
         self.outcome_strategy = outcome_strategy
         self.conductor = conductor
 
-    def worker(self, performer, current_response):
+    def worker(self, performer, current_response, flash_message_func=None):
         self.util.debug_print(
             f"Movement.worker() performer who_am_i: {performer.who_am_i()}")
-        return self.process_output(current_response, performer)
+        return self.process_output(current_response, performer, flash_message_func=flash_message_func)
 
-    def perform(self, prompt_str=None, current_response=None, conductor=None):
+    def perform(self, prompt_str=None, current_response=None, conductor=None, flash_message_func=None):
         if prompt_str is None:
             raise Exception("Movement.perform() requires a prompt string")  # cannot move forward if no prompt string
 
@@ -77,7 +77,7 @@ class Movement:
 
         if self.concurrent is True:
             with concurrent.futures.ThreadPoolExecutor() as executor:
-                futures = {executor.submit(self.worker, performer, current_response): performer for performer in
+                futures = {executor.submit(self.worker, performer, current_response, flash_message_func): performer for performer in
                            self.performers}
                 for future in concurrent.futures.as_completed(futures):
                     try:
@@ -88,7 +88,7 @@ class Movement:
             for performer in self.performers:
                 self.util.debug_print(
                     f"Movement.perform() performer who_am_i: {performer.who_am_i()}")
-                self.process_output(current_response, performer)
+                self.process_output(current_response, performer, flash_message_func=flash_message_func)
 
         if self.outcome_strategy is not None:
             self.util.debug_print(
@@ -97,9 +97,11 @@ class Movement:
         else:
             return self.response_array
 
-    def process_output(self, current_response, performer):
+    def process_output(self, current_response, performer, flash_message_func=None):
         # perform deposits results in performer.__response_raw_text
         self.prompt.set_append_conversation(self.append_conversation)
+        performer.flash_message_func = flash_message_func
+        performer.flash_message_title = self.name
         performer.perform(self.prompt)
 
         outcome_meta = json.loads("{}")
