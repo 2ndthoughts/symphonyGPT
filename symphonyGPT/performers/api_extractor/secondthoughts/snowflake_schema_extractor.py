@@ -45,10 +45,10 @@ def is_connected(conn):
 
 
 class SnowflakeSchemaExtractor(APIExtractor):
-    def __init__(self, database="use_connection_string", table_name="all", example_records=0, connection_string=None):
+    def __init__(self, database="use_connection_string", table_name="all", example_records=0, connection_string=None, cache_dir=None):
         super().__init__()
         self.example_records = example_records
-        self.cache = SymphonyCache("/tmp/symphonyGPT_cache")
+        self.cache = SymphonyCache(cache_dir)
 
         self.table_name = table_name
         

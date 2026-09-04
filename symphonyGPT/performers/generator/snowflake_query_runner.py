@@ -1,4 +1,5 @@
 import mysql.connector
+import os
 import pandas as pd
 import snowflake
 from snowflake.connector.compat import urlparse, parse_qs
@@ -12,14 +13,14 @@ from symphonyGPT.performers.generator.generator import Generator
 from symphonyGPT.symphony.db_util import parse_mysql_connection_string, get_database_name
 from symphonyGPT.symphony.movement import Movement
 from symphonyGPT.symphony.symphony import Symphony
-from symphonyGPT.symphony.symphony_cache import SymphonyCache
+from symphonyGPT.symphony.symphony_cache import SymphonyCache, get_default_cache_dir
 
 
 class SnowflakeQueryRunner(Generator):
-    def __init__(self, database="use_connection_string", connection_string=None, cache_seed="nobody"):
+    def __init__(self, database="use_connection_string", connection_string=None, cache_seed="nobody", cache_dir=None):
         super().__init__()
-        cache_dir = f"/tmp/symphonyGPT_cache/{cache_seed}"
-        self.cache = SymphonyCache(cache_dir)
+        cache_root = cache_dir if cache_dir is not None else get_default_cache_dir()
+        self.cache = SymphonyCache(os.path.join(cache_root, cache_seed))
 
         # snowflake://my_user:my_password@xy12345.us-east-1.aws/?warehouse=my_warehouse&db=my_database&schema=my_schema&role=my_role
         if connection_string is not None:

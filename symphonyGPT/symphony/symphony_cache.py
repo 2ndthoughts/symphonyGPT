@@ -1,13 +1,33 @@
 import atexit
 import os
 import shutil
-import tempfile
 from diskcache import Cache
 
 from symphonyGPT.symphony.util import Util
 
 # default cache expiration time
 TWO_DAYS=2*60*60*24 # 2 days in seconds
+
+DEFAULT_CACHE_DIR = "/tmp/symphonyGPT_cache"
+_default_cache_dir = None
+
+
+def get_default_cache_dir():
+    if _default_cache_dir:
+        return _default_cache_dir
+    env_dir = os.environ.get("SYMPHONYGPT_CACHE_DIR")
+    if env_dir:
+        return env_dir
+    return DEFAULT_CACHE_DIR
+
+
+def set_default_cache_dir(cache_dir):
+    global _default_cache_dir
+    if not cache_dir:
+        return
+    os.makedirs(cache_dir, exist_ok=True)
+    _default_cache_dir = cache_dir
+    os.environ["SYMPHONYGPT_CACHE_DIR"] = cache_dir
 
 
 def delete_old_cache_dirs():
@@ -52,9 +72,9 @@ class SymphonyCache:
             # self.cache_dir = cache_dir + "." + str(os.getpid())
             self.cache_dir = cache_dir
         else:
-            # Create a temporary directory for the cache
-            self.cache_dir = tempfile.mkdtemp()
+            self.cache_dir = get_default_cache_dir()
 
+        os.makedirs(self.cache_dir, exist_ok=True)
         self.cache = Cache(self.cache_dir)
         # Register the cleanup function to run on process exit
         # atexit.register(self.cleanup_cache_dir)
@@ -97,9 +117,9 @@ class SymphonyCache:
 
 # test main
 if __name__ == "__main__":
-    symphony_cache = SymphonyCache("/tmp/symphonyGPT_cache")
+    symphony_cache = SymphonyCache()
     symphony_cache.set("key1", "value1")
     symphony_cache.set("key1", "valueX")
-    symphony_cache = SymphonyCache("/tmp/symphonyGPT_cache")
+    symphony_cache = SymphonyCache()
     symphony_cache.set("key2", "value2")
     print(symphony_cache.get("key1"))
