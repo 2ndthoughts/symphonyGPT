@@ -1,9 +1,28 @@
 import atexit
+import logging
 import os
 import shutil
+import sqlite3
 from diskcache import Cache
 
 from symphonyGPT.symphony.util import Util
+
+_CACHE_DB_FILES = ('cache.db', 'cache.db-shm', 'cache.db-wal', 'cache.db-journal')
+
+
+def _is_corrupt_cache_error(exc):
+    message = str(exc).lower()
+    return 'malformed' in message or 'not a database' in message
+
+
+def _remove_cache_db_files(cache_dir):
+    for name in _CACHE_DB_FILES:
+        path = os.path.join(cache_dir, name)
+        if os.path.lexists(path):
+            try:
+                os.unlink(path)
+            except OSError as exc:
+                logging.warning("Failed to remove cache file %s: %s", path, exc)
 
 # default cache expiration time
 TWO_DAYS=2*60*60*24 # 2 days in seconds
@@ -75,7 +94,14 @@ class SymphonyCache:
             self.cache_dir = get_default_cache_dir()
 
         os.makedirs(self.cache_dir, exist_ok=True)
-        self.cache = Cache(self.cache_dir)
+        try:
+            self.cache = Cache(self.cache_dir)
+        except sqlite3.DatabaseError as exc:
+            if not _is_corrupt_cache_error(exc):
+                raise
+            logging.warning("Resetting malformed cache at %s: %s", self.cache_dir, exc)
+            _remove_cache_db_files(self.cache_dir)
+            self.cache = Cache(self.cache_dir)
         # Register the cleanup function to run on process exit
         # atexit.register(self.cleanup_cache_dir)
 
