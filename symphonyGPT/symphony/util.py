@@ -1,13 +1,20 @@
 import io
+import os
 import random
 import re
 import string
 import sys
+
+# Chroma phones home to PostHog unless this is set before import.
+os.environ.setdefault("ANONYMIZED_TELEMETRY", "False")
 import chromadb
+from chromadb.config import Settings
 import demjson3
 import numpy as np
 from colorama import Fore
 import xml.etree.ElementTree as ET
+
+_CHROMA_SETTINGS = Settings(anonymized_telemetry=False)
 
 
 class Util:
@@ -48,7 +55,7 @@ class Util:
         self.print_line()
         self.print("Collection Counts")
         self.print_line()
-        db_client = chromadb.Client()
+        db_client = chromadb.Client(_CHROMA_SETTINGS)
         for collection in db_client.list_collections():
             self.print(f"{collection.name}: {collection.count()}")
         self.print_line()
@@ -71,7 +78,7 @@ class Util:
         print(top_border)
 
     def get_collection(self, name):
-        db_client = chromadb.Client()
+        db_client = chromadb.Client(_CHROMA_SETTINGS)
         return db_client.get_or_create_collection(name=name)
 
     def add_to_collection(self, name, data):

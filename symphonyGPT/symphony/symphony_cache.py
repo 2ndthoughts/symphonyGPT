@@ -8,21 +8,31 @@ from diskcache import Cache
 from symphonyGPT.symphony.util import Util
 
 _CACHE_DB_FILES = ('cache.db', 'cache.db-shm', 'cache.db-wal', 'cache.db-journal')
+_CACHE_SIDECARS = ('cache.db-shm', 'cache.db-wal', 'cache.db-journal')
 
 
 def _is_corrupt_cache_error(exc):
     message = str(exc).lower()
-    return 'malformed' in message or 'not a database' in message
+    return (
+        'malformed' in message
+        or 'not a database' in message
+        or 'disk i/o error' in message
+        or 'protocol' in message
+    )
 
 
-def _remove_cache_db_files(cache_dir):
-    for name in _CACHE_DB_FILES:
+def _remove_named_cache_files(cache_dir, names):
+    for name in names:
         path = os.path.join(cache_dir, name)
         if os.path.lexists(path):
             try:
                 os.unlink(path)
             except OSError as exc:
                 logging.warning("Failed to remove cache file %s: %s", path, exc)
+
+
+def _remove_cache_db_files(cache_dir):
+    _remove_named_cache_files(cache_dir, _CACHE_DB_FILES)
 
 # default cache expiration time
 TWO_DAYS=2*60*60*24 # 2 days in seconds
@@ -94,16 +104,66 @@ class SymphonyCache:
             self.cache_dir = get_default_cache_dir()
 
         os.makedirs(self.cache_dir, exist_ok=True)
+        self.cache = None
+        # SHM files are machine-local lock maps. A copied cache.db-shm from another
+        # OS can make SQLite treat the cache as empty or corrupt.
         try:
-            self.cache = Cache(self.cache_dir)
+            self._open_cache(remove_shm=True)
         except sqlite3.DatabaseError as exc:
             if not _is_corrupt_cache_error(exc):
                 raise
-            logging.warning("Resetting malformed cache at %s: %s", self.cache_dir, exc)
-            _remove_cache_db_files(self.cache_dir)
-            self.cache = Cache(self.cache_dir)
+            self._recover_cache(exc)
         # Register the cleanup function to run on process exit
         # atexit.register(self.cleanup_cache_dir)
+
+    def _close_cache(self):
+        cache = getattr(self, "cache", None)
+        if cache is None:
+            return
+        try:
+            cache.close()
+        except Exception as exc:
+            logging.warning("Failed to close cache at %s: %s", self.cache_dir, exc)
+        self.cache = None
+
+    def _open_cache(self, *, remove_shm=False, sidecars_only=False, reset_files=False):
+        self._close_cache()
+        if reset_files:
+            _remove_cache_db_files(self.cache_dir)
+        elif sidecars_only:
+            _remove_named_cache_files(self.cache_dir, _CACHE_SIDECARS)
+        elif remove_shm:
+            _remove_named_cache_files(self.cache_dir, ('cache.db-shm',))
+        self.cache = Cache(self.cache_dir)
+
+    def _recover_cache(self, exc):
+        logging.warning("Retrying cache at %s after removing WAL/SHM: %s", self.cache_dir, exc)
+        try:
+            self._open_cache(sidecars_only=True)
+            return
+        except sqlite3.DatabaseError as retry_exc:
+            if not _is_corrupt_cache_error(retry_exc):
+                raise
+            exc = retry_exc
+        logging.warning("Resetting malformed cache at %s: %s", self.cache_dir, exc)
+        self._open_cache(reset_files=True)
+
+    def _run_cache_op(self, operation):
+        try:
+            return operation()
+        except sqlite3.DatabaseError as exc:
+            if not _is_corrupt_cache_error(exc):
+                raise
+            logging.warning("Retrying cache at %s after removing WAL/SHM: %s", self.cache_dir, exc)
+            try:
+                self._open_cache(sidecars_only=True)
+                return operation()
+            except sqlite3.DatabaseError as retry_exc:
+                if not _is_corrupt_cache_error(retry_exc):
+                    raise
+                logging.warning("Resetting malformed cache at %s: %s", self.cache_dir, retry_exc)
+                self._open_cache(reset_files=True)
+                return operation()
 
     # Function to cleanup the cache directory
     def cleanup_cache_dir(self):
@@ -115,31 +175,30 @@ class SymphonyCache:
             Util().debug_print(f"Cache directory {self.cache_dir} has been deleted.")
 
     def set(self, key, value, expire_seconds=None):
-        if expire_seconds is not None:
-            self.cache.set(key, value, expire=expire_seconds)
-        else:
-            self.cache.set(key, value, expire=TWO_DAYS)  # Set expiration to 1 day
+        expire = expire_seconds if expire_seconds is not None else TWO_DAYS
+        self._run_cache_op(lambda: self.cache.set(key, value, expire=expire))
 
     def get(self, key):
-        answer = self.cache.get(key)
-        if answer is None:
-            return f"{key} not found"
-        else: # If the key exists, refresh its expiration time
-            self.cache.touch(key, expire=TWO_DAYS)  # Refresh expiration time
+        def _get():
+            answer = self.cache.get(key)
+            if answer is None:
+                return f"{key} not found"
+            self.cache.touch(key, expire=TWO_DAYS)
+            return answer
 
-        return answer
+        return self._run_cache_op(_get)
 
     def touch(self, key, expire=TWO_DAYS):
-        self.cache.touch(key, expire=expire)  # Refresh expiration time
+        return self._run_cache_op(lambda: self.cache.touch(key, expire=expire))
 
     def get_all_keys(self):
-        return list(self.cache.iterkeys())
+        return self._run_cache_op(lambda: list(self.cache.iterkeys()))
 
     def delete(self, key):
-        return self.cache.delete(key, True)
+        return self._run_cache_op(lambda: self.cache.delete(key, True))
 
     def clear(self):
-        self.cache.clear()
+        self._run_cache_op(lambda: self.cache.clear())
 
 # test main
 if __name__ == "__main__":
