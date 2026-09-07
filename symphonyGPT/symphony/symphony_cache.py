@@ -35,10 +35,24 @@ def _remove_cache_db_files(cache_dir):
     _remove_named_cache_files(cache_dir, _CACHE_DB_FILES)
 
 # default cache expiration time
-TWO_DAYS=2*60*60*24 # 2 days in seconds
+TWO_DAYS = 2 * 60 * 60 * 24  # 2 days in seconds
+_USE_DEFAULT_EXPIRE = object()
+CACHE_EXPIRE_FILE = "cache_expire"
+CACHE_EXPIRE_NEVER = "Never"
+CACHE_EXPIRE_OPTIONS = (
+    (CACHE_EXPIRE_NEVER, None),
+    ("1 hour", 60 * 60),
+    ("1 day", 24 * 60 * 60),
+    ("2 days", 2 * 24 * 60 * 60),
+    ("7 days", 7 * 24 * 60 * 60),
+    ("30 days", 30 * 24 * 60 * 60),
+    ("90 days", 90 * 24 * 60 * 60),
+)
+_CACHE_EXPIRE_BY_LABEL = {label.lower(): seconds for label, seconds in CACHE_EXPIRE_OPTIONS}
 
 DEFAULT_CACHE_DIR = "/tmp/symphonyGPT_cache"
 _default_cache_dir = None
+_expire_file_cache = (None, None, None)  # path, mtime, seconds
 
 
 def get_default_cache_dir():
@@ -57,6 +71,113 @@ def set_default_cache_dir(cache_dir):
     os.makedirs(cache_dir, exist_ok=True)
     _default_cache_dir = cache_dir
     os.environ["SYMPHONYGPT_CACHE_DIR"] = cache_dir
+
+
+def parse_expire_label(value):
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        return int(value) if value > 0 else None
+
+    text = str(value).strip()
+    if not text:
+        return None
+
+    lowered = text.lower()
+    if lowered in _CACHE_EXPIRE_BY_LABEL:
+        return _CACHE_EXPIRE_BY_LABEL[lowered]
+    if lowered in ("none", "off"):
+        return None
+
+    try:
+        seconds = float(text)
+    except ValueError:
+        raise ValueError(f"Unknown cache expiration: {value}") from None
+    return int(seconds) if seconds > 0 else None
+
+
+def format_expire_env(expire_seconds):
+    return "never" if expire_seconds is None else str(int(expire_seconds))
+
+
+def _expire_file_path(cache_dir=None):
+    return os.path.join(cache_dir or get_default_cache_dir(), CACHE_EXPIRE_FILE)
+
+
+def get_default_expire_seconds():
+    global _expire_file_cache
+    path = _expire_file_path()
+    try:
+        mtime = os.path.getmtime(path)
+    except OSError:
+        mtime = None
+    else:
+        cached_path, cached_mtime, cached_value = _expire_file_cache
+        if cached_path == path and cached_mtime == mtime:
+            return cached_value
+        try:
+            with open(path, "r", encoding="utf-8") as handle:
+                expire_seconds = parse_expire_label(handle.read())
+        except (OSError, ValueError):
+            expire_seconds = None
+        else:
+            _expire_file_cache = (path, mtime, expire_seconds)
+            return expire_seconds
+
+    env_value = os.environ.get("SYMPHONYGPT_CACHE_EXPIRE")
+    if env_value is not None:
+        try:
+            return parse_expire_label(env_value)
+        except ValueError:
+            return None
+    return None
+
+
+def set_default_expire_seconds(expire_seconds, cache_dir=None):
+    global _expire_file_cache
+    expire_seconds = parse_expire_label(expire_seconds)
+    label = format_expire_env(expire_seconds)
+    os.environ["SYMPHONYGPT_CACHE_EXPIRE"] = label
+
+    cache_root = cache_dir or get_default_cache_dir()
+    os.makedirs(cache_root, exist_ok=True)
+    path = _expire_file_path(cache_root)
+    with open(path, "w", encoding="utf-8") as handle:
+        handle.write(label)
+        handle.write("\n")
+    try:
+        mtime = os.path.getmtime(path)
+    except OSError:
+        mtime = None
+    _expire_file_cache = (path, mtime, expire_seconds)
+    return expire_seconds
+
+
+def iter_cache_dirs(cache_root=None):
+    cache_root = cache_root or get_default_cache_dir()
+    if not cache_root or not os.path.isdir(cache_root):
+        return
+    for dirpath, _dirnames, filenames in os.walk(cache_root):
+        if "cache.db" in filenames:
+            yield dirpath
+
+
+def apply_expire_to_cache_dirs(cache_root=None, expire=_USE_DEFAULT_EXPIRE):
+    expire_value = get_default_expire_seconds() if expire is _USE_DEFAULT_EXPIRE else parse_expire_label(expire)
+    updated = 0
+    directories = 0
+    for cache_dir in iter_cache_dirs(cache_root):
+        cache = Cache(cache_dir)
+        try:
+            for key in list(cache.iterkeys()):
+                cache.touch(key, expire=expire_value, retry=True)
+                updated += 1
+            directories += 1
+        finally:
+            cache.close()
+    return directories, updated
 
 
 def delete_old_cache_dirs():
@@ -174,22 +295,32 @@ class SymphonyCache:
             shutil.rmtree(self.cache_dir)
             Util().debug_print(f"Cache directory {self.cache_dir} has been deleted.")
 
-    def set(self, key, value, expire_seconds=None):
-        expire = expire_seconds if expire_seconds is not None else TWO_DAYS
-        self._run_cache_op(lambda: self.cache.set(key, value, expire=expire))
+    def set(self, key, value, expire_seconds=_USE_DEFAULT_EXPIRE):
+        expire = get_default_expire_seconds() if expire_seconds is _USE_DEFAULT_EXPIRE else parse_expire_label(expire_seconds)
+        self._run_cache_op(lambda: self.cache.set(key, value, expire=expire, retry=True))
 
     def get(self, key):
         def _get():
             answer = self.cache.get(key)
             if answer is None:
                 return f"{key} not found"
-            self.cache.touch(key, expire=TWO_DAYS)
+            expire = get_default_expire_seconds()
+            if expire is not None:
+                self.cache.touch(key, expire=expire, retry=True)
             return answer
 
         return self._run_cache_op(_get)
 
-    def touch(self, key, expire=TWO_DAYS):
-        return self._run_cache_op(lambda: self.cache.touch(key, expire=expire))
+    def touch(self, key, expire=_USE_DEFAULT_EXPIRE):
+        expire_value = get_default_expire_seconds() if expire is _USE_DEFAULT_EXPIRE else parse_expire_label(expire)
+        return self._run_cache_op(lambda: self.cache.touch(key, expire=expire_value, retry=True))
+
+    def touch_all(self, expire=_USE_DEFAULT_EXPIRE):
+        expire_value = get_default_expire_seconds() if expire is _USE_DEFAULT_EXPIRE else parse_expire_label(expire)
+        keys = self.get_all_keys()
+        for key in keys:
+            self.touch(key, expire=expire_value)
+        return len(keys)
 
     def get_all_keys(self):
         return self._run_cache_op(lambda: list(self.cache.iterkeys()))
