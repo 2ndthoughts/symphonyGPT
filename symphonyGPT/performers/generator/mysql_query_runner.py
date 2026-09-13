@@ -80,7 +80,7 @@ class MySQLQueryRunner(Generator):
         except mysql.connector.Error as e:
             print(f"Error: {e}")
         finally:
-            if conn.is_connected():
+            if conn is not None and conn.is_connected():
                 conn.close()
 
     def load_excel(self, excel_file, dataset_name):
@@ -345,6 +345,7 @@ class MySQLQueryRunner(Generator):
 
         # Connect to the MySQL Database
         conn = None
+        database_name = None
         try:
             database_name = get_database_name(self.mysql_params, self.database)
             conn = mysql.connector.connect(
@@ -352,7 +353,7 @@ class MySQLQueryRunner(Generator):
                 user=self.mysql_params['user'],
                 password=self.mysql_params['password'],
                 database=database_name,
-                port=self.mysql_params['port']
+                port=self.mysql_params.get('port') or 3306
             )
             self.util.debug_print(
                 f"Connected to the database '{database_name}' on {self.mysql_params['host']} as {self.mysql_params['user']}")
@@ -405,6 +406,13 @@ class MySQLQueryRunner(Generator):
             self.cache.set("SQLQueryRunner.result_rows", json.dumps(serialized_results))
         except mysql.connector.Error as e:
             answer = f"Error: {e}"
+            logging.error(
+                "MySQL query failed on %s/%s as %s: %s",
+                self.mysql_params.get('host'),
+                database_name or self.database,
+                self.mysql_params.get('user'),
+                e
+            )
             self.cache.set("SQLQueryRunner.error", f"Error: {e}")
             self.cache.set("SQLQueryRunner.columns", json.dumps([]))
             self.cache.set("SQLQueryRunner.result_rows", json.dumps([]))
@@ -415,7 +423,7 @@ class MySQLQueryRunner(Generator):
             self.cache.set("SQLQueryRunner.result_rows", json.dumps([]))
             logging.error(f"Unexpected error: {e}")
         finally:
-            if conn.is_connected():
+            if conn is not None and conn.is_connected():
                 conn.close()
                 self.util.debug_print("Connection closed")
 

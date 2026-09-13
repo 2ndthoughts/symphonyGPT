@@ -20,7 +20,7 @@ def get_database_name(mysql_params, database):
 
 def parse_mysql_connection_string(conn_str):
     pattern = re.compile(
-        r'mysql://(?P<user>[^:]+):(?P<password>[^@]+)@(?P<host>[^:]+):(?P<port>[^/]+)/(?P<database>.+)'
+        r'mysql://(?P<user>[^:]+):(?P<password>[^@]+)@(?P<host>[^:/]+):(?P<port>[^/]+)/(?P<database>.+)'
     )
     match = pattern.match(conn_str)
     if match:
@@ -28,10 +28,19 @@ def parse_mysql_connection_string(conn_str):
     else:
         # if partial match, return partial dict, database name is optional
         pattern = re.compile(
-            r'mysql://(?P<user>[^:]+):(?P<password>[^@]+)@(?P<host>[^:]+):(?P<port>[^/]+)'
+            r'mysql://(?P<user>[^:]+):(?P<password>[^@]+)@(?P<host>[^:/]+):(?P<port>[^/]+)'
         )
         match = pattern.match(conn_str)
         if match:
             return match.groupdict()
+        # host without an explicit port, default to 3306
+        pattern = re.compile(
+            r'mysql://(?P<user>[^:]+):(?P<password>[^@]+)@(?P<host>[^:/]+)(?:/(?P<database>.+))?'
+        )
+        match = pattern.match(conn_str or '')
+        if match:
+            params = match.groupdict()
+            params['port'] = '3306'
+            return params
         else:
             raise ValueError("Invalid MySQL connection string")
