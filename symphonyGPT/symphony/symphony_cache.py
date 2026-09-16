@@ -18,6 +18,7 @@ def _is_corrupt_cache_error(exc):
         or 'not a database' in message
         or 'disk i/o error' in message
         or 'protocol' in message
+        or 'corrupt' in message
     )
 
 
@@ -31,8 +32,32 @@ def _remove_named_cache_files(cache_dir, names):
                 logging.warning("Failed to remove cache file %s: %s", path, exc)
 
 
-def _remove_cache_db_files(cache_dir):
+def reset_cache_db(cache_dir):
     _remove_named_cache_files(cache_dir, _CACHE_DB_FILES)
+
+
+def _remove_cache_db_files(cache_dir):
+    reset_cache_db(cache_dir)
+
+
+def cache_db_path(cache_dir):
+    return os.path.join(cache_dir, 'cache.db')
+
+
+def is_cache_db_healthy(cache_dir):
+    db_path = cache_db_path(cache_dir)
+    if not os.path.isfile(db_path):
+        return True
+    try:
+        con = sqlite3.connect(f'file:{db_path}?mode=ro', uri=True, timeout=5.0)
+        try:
+            row = con.execute('PRAGMA quick_check').fetchone()
+            return bool(row and str(row[0]).lower() == 'ok')
+        finally:
+            con.close()
+    except sqlite3.Error as exc:
+        logging.warning("Cache health check failed at %s: %s", db_path, exc)
+        return False
 
 # default cache expiration time
 TWO_DAYS = 2 * 60 * 60 * 24  # 2 days in seconds
@@ -228,12 +253,16 @@ class SymphonyCache:
         self.cache = None
         # SHM files are machine-local lock maps. A copied cache.db-shm from another
         # OS can make SQLite treat the cache as empty or corrupt.
-        try:
-            self._open_cache(remove_shm=True)
-        except sqlite3.DatabaseError as exc:
-            if not _is_corrupt_cache_error(exc):
-                raise
-            self._recover_cache(exc)
+        if not is_cache_db_healthy(self.cache_dir):
+            logging.warning("Resetting corrupt cache at %s", self.cache_dir)
+            self._open_cache(reset_files=True)
+        else:
+            try:
+                self._open_cache(remove_shm=True)
+            except sqlite3.Error as exc:
+                if not _is_corrupt_cache_error(exc):
+                    raise
+                self._recover_cache(exc)
         # Register the cleanup function to run on process exit
         # atexit.register(self.cleanup_cache_dir)
 
@@ -261,30 +290,43 @@ class SymphonyCache:
         logging.warning("Retrying cache at %s after removing WAL/SHM: %s", self.cache_dir, exc)
         try:
             self._open_cache(sidecars_only=True)
-            return
-        except sqlite3.DatabaseError as retry_exc:
+            if is_cache_db_healthy(self.cache_dir):
+                return
+        except sqlite3.Error as retry_exc:
             if not _is_corrupt_cache_error(retry_exc):
                 raise
             exc = retry_exc
         logging.warning("Resetting malformed cache at %s: %s", self.cache_dir, exc)
         self._open_cache(reset_files=True)
 
-    def _run_cache_op(self, operation):
+    def _run_cache_op(self, operation, fallback=None):
         try:
             return operation()
-        except sqlite3.DatabaseError as exc:
+        except sqlite3.Error as exc:
             if not _is_corrupt_cache_error(exc):
+                if fallback is not None:
+                    logging.warning("Cache operation failed at %s: %s", self.cache_dir, exc)
+                    return fallback
                 raise
             logging.warning("Retrying cache at %s after removing WAL/SHM: %s", self.cache_dir, exc)
             try:
                 self._open_cache(sidecars_only=True)
                 return operation()
-            except sqlite3.DatabaseError as retry_exc:
+            except sqlite3.Error as retry_exc:
                 if not _is_corrupt_cache_error(retry_exc):
+                    if fallback is not None:
+                        logging.warning("Cache operation failed at %s: %s", self.cache_dir, retry_exc)
+                        return fallback
                     raise
                 logging.warning("Resetting malformed cache at %s: %s", self.cache_dir, retry_exc)
                 self._open_cache(reset_files=True)
-                return operation()
+                try:
+                    return operation()
+                except sqlite3.Error as final_exc:
+                    logging.error("Cache still unusable at %s: %s", self.cache_dir, final_exc)
+                    if fallback is not None:
+                        return fallback
+                    raise
 
     # Function to cleanup the cache directory
     def cleanup_cache_dir(self):
@@ -309,7 +351,7 @@ class SymphonyCache:
                 self.cache.touch(key, expire=expire, retry=True)
             return answer
 
-        return self._run_cache_op(_get)
+        return self._run_cache_op(_get, fallback=f"{key} not found")
 
     def touch(self, key, expire=_USE_DEFAULT_EXPIRE):
         expire_value = get_default_expire_seconds() if expire is _USE_DEFAULT_EXPIRE else parse_expire_label(expire)
