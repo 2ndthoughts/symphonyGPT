@@ -184,7 +184,9 @@ def iter_cache_dirs(cache_root=None):
     cache_root = cache_root or get_default_cache_dir()
     if not cache_root or not os.path.isdir(cache_root):
         return
-    for dirpath, _dirnames, filenames in os.walk(cache_root):
+    skip_names = {"zboot", "zboot-local", "backups", "__pycache__"}
+    for dirpath, dirnames, filenames in os.walk(cache_root):
+        dirnames[:] = [name for name in dirnames if name not in skip_names and not name.startswith(".")]
         if "cache.db" in filenames:
             yield dirpath
 
