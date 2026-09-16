@@ -3,6 +3,7 @@ import logging
 import os
 import shutil
 import sqlite3
+from urllib.parse import quote
 from diskcache import Cache
 
 from symphonyGPT.symphony.util import Util
@@ -44,15 +45,19 @@ def cache_db_path(cache_dir):
     return os.path.join(cache_dir, 'cache.db')
 
 
-def is_cache_db_healthy(cache_dir):
+def is_cache_db_healthy(cache_dir, immutable=False):
     db_path = cache_db_path(cache_dir)
     if not os.path.isfile(db_path):
         return True
+    quoted = quote(os.path.abspath(db_path), safe="/")
+    params = "mode=ro"
+    if immutable:
+        params += "&immutable=1&nolock=1"
     try:
-        con = sqlite3.connect(f'file:{db_path}?mode=ro', uri=True, timeout=5.0)
+        con = sqlite3.connect(f"file:{quoted}?{params}", uri=True, timeout=5.0)
         try:
-            row = con.execute('PRAGMA quick_check').fetchone()
-            return bool(row and str(row[0]).lower() == 'ok')
+            row = con.execute("PRAGMA quick_check").fetchone()
+            return bool(row and str(row[0]).lower() == "ok")
         finally:
             con.close()
     except sqlite3.Error as exc:
