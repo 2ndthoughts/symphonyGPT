@@ -343,6 +343,16 @@ class MySQLQueryRunner(Generator):
         self.cache.set("SQLQueryRunner.sql", sql)
         self.cache.set("SQLQueryRunner.error", "None")  # clear any previous error
 
+        sql_text_stripped = (sql or "").strip()
+        if sql_text_stripped.lower().startswith("error:") or "unable to get response from api" in sql_text_stripped.lower():
+            answer = sql_text_stripped
+            logging.error("Refusing to execute non-SQL generator error: %s", answer)
+            self.cache.set("SQLQueryRunner.error", answer)
+            self.cache.set("SQLQueryRunner.columns", json.dumps([]))
+            self.cache.set("SQLQueryRunner.result_rows", json.dumps([]))
+            self.set_raw_response(answer)
+            return
+
         # Connect to the MySQL Database
         conn = None
         database_name = None

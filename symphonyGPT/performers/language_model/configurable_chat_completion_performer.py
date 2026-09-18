@@ -188,6 +188,7 @@ class ConfigurableChatCompletionPerformer(OpenAIPerformer):
 
         tries = 0
         completion_content = None
+        last_error = None
         while tries < 3:
             tries += 1
             # now add the user prompt
@@ -207,7 +208,8 @@ class ConfigurableChatCompletionPerformer(OpenAIPerformer):
                 error_str = str(e)
                 error_str = error_str.replace("\r", " ")
                 error_str = error_str.replace("\n", " ")
-                self.set_raw_response("Error: '" + error_str + "'")
+                last_error = f"Error: '{error_str}'"
+                self.set_raw_response(last_error)
 
                 logging.debug(f"{error_str} retrying {tries}/3")
 
@@ -216,7 +218,7 @@ class ConfigurableChatCompletionPerformer(OpenAIPerformer):
                     ConfigurableChatCompletionPerformer.conversation_array.pop()
 
         if completion_content is None:
-            self.set_raw_response("Error: Unable to get response from API")
+            self.set_raw_response(last_error or "Error: Unable to get response from API")
         else:
             self.set_raw_response(completion_content)
 
@@ -337,21 +339,32 @@ class ConfigurableChatCompletionPerformer(OpenAIPerformer):
         # Some models only fill reasoning_content; use it only after stripping traces.
         return self._strip_thinking_markup(reasoning or "")
 
+    def _inference_elapsed_label(self):
+        started = getattr(self, "_inference_flash_started", None)
+        if not started:
+            return "0.0s"
+        elapsed = max(0.0, time.monotonic() - started)
+        return f"{elapsed:.1f}s"
+
     def _emit_inference_flash(self, flash_cb, title, reasoning, content, waiting=False, done=False):
         if flash_cb is None:
             return
         pct = self._guess_completion_pct(reasoning, content, waiting=waiting, done=done)
+        elapsed_label = self._inference_elapsed_label()
         if done:
-            status = f"Done {pct}%"
+            status = f"Done {pct}% ({elapsed_label})"
         elif content:
-            status = f"Draft... {pct}%"
+            status = f"Draft... {pct}% ({elapsed_label})"
         elif reasoning:
-            status = f"Thinking... {pct}%"
+            status = f"Thinking... {pct}% ({elapsed_label})"
         else:
-            status = f"Waiting for Agent... {pct}%"
+            status = f"Waiting for Agent... {pct}% ({elapsed_label})"
         # Use <br> so a callback that prints to stdout cannot split this across
         # lines and leak "Thinking..." into the browser echo.
-        flash_cb(f"**{title}**<br>{status}|in_process")
+        try:
+            flash_cb(f"**{title}**<br>{status}|in_process")
+        except Exception as e:
+            logging.debug(f"inference flash callback failed: {e}")
 
     def _coerce_text(self, value, allow_thinking=False):
         if value is None:
