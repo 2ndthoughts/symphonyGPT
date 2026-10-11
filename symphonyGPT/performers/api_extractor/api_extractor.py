@@ -2,21 +2,25 @@ import os
 
 os.environ.setdefault("ANONYMIZED_TELEMETRY", "False")
 
-import chromadb
-from chromadb.config import Settings
 from chromadb.utils import embedding_functions
 from symphonyGPT.performers.performer import Performer
+from symphonyGPT.symphony.chroma_client import chroma_client
 
 
 class APIExtractor(Performer):
-    def __init__(self, max_results=5, max_embeddings_results=5):
+    def __init__(self, max_results=5, max_embeddings_results=5, use_embeddings=True):
         super().__init__()
         self.max_results = max_results
         self.set_type("api_extractor")
-        self.db_client = chromadb.Client(Settings(anonymized_telemetry=False))
+        self.max_embeddings_results = max_embeddings_results
+        self.db_client = None
+        self.collection = None
+        self.default_embedding_function = None
+        if not use_embeddings:
+            return
+        self.db_client = chroma_client()
         self.collection = self.db_client.get_or_create_collection(name=f"s_{self.__class__.__name__}")
         self.default_embedding_function = embedding_functions.DefaultEmbeddingFunction()
-        self.max_embeddings_results = max_embeddings_results
 
     def create_query_array_from_classifier(self, classifications):
         query_array = []

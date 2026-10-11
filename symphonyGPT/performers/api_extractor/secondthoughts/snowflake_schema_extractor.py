@@ -46,7 +46,7 @@ def is_connected(conn):
 
 class SnowflakeSchemaExtractor(APIExtractor):
     def __init__(self, database="use_connection_string", table_name="all", example_records=0, connection_string=None, cache_dir=None):
-        super().__init__()
+        super().__init__(use_embeddings=False)
         self.example_records = example_records
         self.cache = SymphonyCache(cache_dir)
 

@@ -3,9 +3,8 @@ import os
 os.environ.setdefault("ANONYMIZED_TELEMETRY", "False")
 os.environ["TOKENIZERS_PARALLELISM"] = "true"  # to avoid dead lock warning
 
-import chromadb
-from chromadb.config import Settings
 from chromadb.utils import embedding_functions
+from symphonyGPT.symphony.chroma_client import chroma_client
 from symphonyGPT.performers.language_model.openai_performers.gpt_4 import Gpt4
 from symphonyGPT.symphony.prompt import Prompt
 from symphonyGPT.symphony.util import Util
@@ -16,7 +15,7 @@ chunk_size = 25000
 
 def summarize_result_in_chunks(summarize_this_str, summarizing_prompt, prompt_str=None):
     util = Util()
-    db_client = chromadb.Client(Settings(anonymized_telemetry=False))
+    db_client = chroma_client()
     summarizer_name = f"summarizer_{util.random_string(5)}"
     collection = db_client.get_or_create_collection(name=f"{summarizer_name}")
     default_embedding_function = embedding_functions.DefaultEmbeddingFunction()

@@ -12,7 +12,7 @@ from symphonyGPT.symphony.symphony_cache import SymphonyCache
 
 class MySQLSchemaExtractor(APIExtractor):
     def __init__(self, database="use_connection_string", table_name="all", example_records=0, connection_string=None, cache_dir=None):
-        super().__init__()
+        super().__init__(use_embeddings=False)
         # mysql://root:password123@localhost:3306/mydatabase
         if connection_string is not None:
             self.conn_str = connection_string
