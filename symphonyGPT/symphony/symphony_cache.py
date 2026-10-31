@@ -3,9 +3,10 @@ import logging
 import os
 import shutil
 import sqlite3
+import threading
 import time
 from urllib.parse import quote
-from diskcache import Cache
+from diskcache import Cache, Timeout
 
 from symphonyGPT.symphony.util import Util
 
@@ -13,15 +14,23 @@ _CACHE_DB_FILES = ('cache.db', 'cache.db-shm', 'cache.db-wal', 'cache.db-journal
 _CACHE_SIDECARS = ('cache.db-shm', 'cache.db-wal', 'cache.db-journal')
 
 
+def _is_corruption_message(message):
+    """True only when SQLite is describing a damaged database file.
+
+    Disk I/O errors and "locking protocol" show up after sleep or a killed
+    process. Those are not corruption, and deleting the WAL in response drops
+    every cache entry that had not been checkpointed.
+    """
+    text = str(message or "").lower()
+    if not text:
+        return False
+    if "malformed" in text or "not a database" in text or "corrupt" in text:
+        return True
+    return "quick_check" in text or "never used" in text or text.startswith("page ")
+
+
 def _is_corrupt_cache_error(exc):
-    message = str(exc).lower()
-    return (
-        'malformed' in message
-        or 'not a database' in message
-        or 'disk i/o error' in message
-        or 'protocol' in message
-        or 'corrupt' in message
-    )
+    return _is_corruption_message(exc)
 
 
 def _remove_named_cache_files(cache_dir, names):
@@ -247,6 +256,24 @@ def iter_cache_dirs(cache_root=None):
             yield dirpath
 
 
+def _checkpoint_wal(cache_dir):
+    """Fold committed WAL frames into cache.db without deleting those files."""
+    db_path = cache_db_path(cache_dir)
+    if not os.path.isfile(db_path):
+        return False
+    try:
+        con = sqlite3.connect(db_path, timeout=30.0)
+        try:
+            con.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+            con.commit()
+        finally:
+            con.close()
+        return True
+    except sqlite3.Error as exc:
+        logging.warning("Failed to checkpoint cache at %s: %s", db_path, exc)
+        return False
+
+
 def checkpoint_cache_dir(cache_dir):
     """Flush WAL into cache.db and drop sidecar files so a later copy is safe."""
     db_path = cache_db_path(cache_dir)
@@ -270,6 +297,75 @@ def checkpoint_cache_dir(cache_dir):
 
 _live_caches = []
 _caches_closed = False
+_main_cache_depth = 0
+_main_cache_depth_lock = threading.Lock()
+_main_cache_cancel_hook = None
+
+
+def main_cache_op_depth():
+    """How many cache operations the main thread is inside.
+
+    A generation cancel waits until this returns to zero so a signal cannot
+    interrupt a SQLite write.
+    """
+    return _main_cache_depth
+
+
+def set_main_cache_cancel_hook(hook):
+    """Call `hook` on the main thread after the outermost cache operation."""
+    global _main_cache_cancel_hook
+    _main_cache_cancel_hook = hook
+
+
+class _MainThreadCacheSection:
+    def __enter__(self):
+        global _main_cache_depth
+        self.tracked = threading.current_thread() is threading.main_thread()
+        if self.tracked:
+            with _main_cache_depth_lock:
+                _main_cache_depth += 1
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        global _main_cache_depth
+        if not self.tracked:
+            return False
+        with _main_cache_depth_lock:
+            _main_cache_depth -= 1
+            depth = _main_cache_depth
+        if exc_type is None and depth == 0:
+            hook = _main_cache_cancel_hook
+            if hook is not None:
+                hook()
+        return False
+
+
+def checkpoint_live_cache_dir(cache_dir):
+    """Flush committed WAL frames without closing the file or deleting sidecars."""
+    db_path = cache_db_path(cache_dir)
+    if not os.path.isfile(db_path):
+        return False
+    try:
+        con = sqlite3.connect(db_path, timeout=30.0)
+        try:
+            con.execute("PRAGMA wal_checkpoint(PASSIVE)")
+        finally:
+            con.close()
+        return True
+    except sqlite3.Error as exc:
+        logging.warning("Failed to checkpoint live cache at %s: %s", db_path, exc)
+        return False
+
+
+def checkpoint_open_caches():
+    """Checkpoint every open cache without deleting cache.db or its WAL."""
+    seen = set()
+    for inst in list(_live_caches):
+        cache_dir = getattr(inst, "cache_dir", None)
+        if not cache_dir or cache_dir in seen:
+            continue
+        seen.add(cache_dir)
+        checkpoint_live_cache_dir(cache_dir)
 
 
 def close_all_caches(cache_root=None):
@@ -355,15 +451,24 @@ class SymphonyCache:
 
         os.makedirs(self.cache_dir, exist_ok=True)
         self.cache = None
-        # SHM files are machine-local lock maps. A leftover cache.db-shm from a
-        # killed process (or another OS) can make SQLite report the cache as
-        # empty or corrupt. Strip WAL/SHM and re-check before wiping cache.db.
         issue = cache_db_health_issue(self.cache_dir)
-        if issue:
+        if issue and not _is_corruption_message(issue):
+            logging.warning(
+                "Cache health check at %s: %s. Opening without deleting files.",
+                cache_db_path(self.cache_dir),
+                issue,
+            )
+            try:
+                self._open_cache()
+            except sqlite3.Error as exc:
+                if not _is_corrupt_cache_error(exc):
+                    raise
+                self._recover_cache(exc)
+        elif issue:
             self._recover_cache(issue)
         else:
             try:
-                self._open_cache(remove_shm=True)
+                self._open_cache()
             except sqlite3.Error as exc:
                 if not _is_corrupt_cache_error(exc):
                     raise
@@ -381,46 +486,46 @@ class SymphonyCache:
             logging.warning("Failed to close cache at %s: %s", self.cache_dir, exc)
         self.cache = None
 
-    def _open_cache(self, *, remove_shm=False, sidecars_only=False, reset_files=False):
+    def _open_cache(self, *, reset_files=False):
         self._close_cache()
         if reset_files:
             _remove_cache_db_files(self.cache_dir)
-        elif sidecars_only:
-            _remove_named_cache_files(self.cache_dir, _CACHE_SIDECARS)
-        elif remove_shm:
-            _remove_named_cache_files(self.cache_dir, ('cache.db-shm',))
         self.cache = Cache(self.cache_dir)
 
     def _recover_cache(self, exc):
+        """Reopen the cache. Delete cache.db only when the file itself is corrupt.
+
+        A stale shm is removed only after a checkpoint attempt. The WAL is left
+        in place so uncheckpointed dashboard and analysis entries survive.
+        """
         label = _short_cache_label(self.cache_dir)
         reason = str(exc).strip() or "unknown error"
-        _notify_cache_event(
-            self.cache_dir,
-            f"Cache failure at {label}: {reason}",
-        )
-        _notify_cache_event(
-            self.cache_dir,
-            f"Cache recovery at {label}: removing WAL/SHM and re-checking cache.db",
-        )
+        logging.warning("Cache failure at %s: %s", label, reason)
         self._close_cache()
-        _remove_named_cache_files(self.cache_dir, _CACHE_SIDECARS)
-        retry_issue = cache_db_health_issue(self.cache_dir)
-        if not retry_issue:
-            try:
-                self._open_cache()
-                _notify_cache_event(
-                    self.cache_dir,
-                    f"Cache recovered at {label} after removing WAL/SHM",
-                )
-                return
-            except sqlite3.Error as retry_exc:
-                if not _is_corrupt_cache_error(retry_exc):
-                    raise
-                retry_issue = str(retry_exc)
-        _notify_cache_event(
-            self.cache_dir,
-            f"Cache recovery at {label} failed after removing WAL/SHM: {retry_issue}",
-        )
+
+        if not _is_corruption_message(reason):
+            _checkpoint_wal(self.cache_dir)
+            self._open_cache()
+            logging.warning("Cache at %s kept after a non-corruption error", label)
+            return
+
+        _checkpoint_wal(self.cache_dir)
+        issue = cache_db_health_issue(self.cache_dir)
+        if not issue:
+            self._open_cache()
+            logging.warning("Cache at %s recovered after checkpointing the WAL", label)
+            return
+
+        # A shm copied from another machine can hide the WAL. Drop only that
+        # index and let SQLite rebuild it from the WAL file.
+        _remove_named_cache_files(self.cache_dir, ('cache.db-shm',))
+        _checkpoint_wal(self.cache_dir)
+        issue = cache_db_health_issue(self.cache_dir)
+        if not issue or not _is_corruption_message(issue):
+            self._open_cache()
+            logging.warning("Cache at %s recovered after removing a stale shm", label)
+            return
+
         _notify_cache_event(
             self.cache_dir,
             f"Cache reset at {label}; previous cached analysis will be regenerated",
@@ -429,64 +534,36 @@ class SymphonyCache:
         self._open_cache(reset_files=True)
 
     def _run_cache_op(self, operation, fallback=None):
+        with _MainThreadCacheSection():
+            return self._run_cache_op_body(operation, fallback)
+
+    def _run_cache_op_body(self, operation, fallback=None):
         label = _short_cache_label(self.cache_dir)
         try:
             return operation()
-        except sqlite3.Error as exc:
-            if not _is_corrupt_cache_error(exc):
+        except (sqlite3.Error, Timeout) as exc:
+            if _is_corruption_message(exc):
+                self._recover_cache(exc)
+            else:
+                logging.warning(
+                    "Cache operation failed at %s: %s. Retrying without deleting the cache.",
+                    label,
+                    exc,
+                )
+                self._close_cache()
+                _checkpoint_wal(self.cache_dir)
+                self._open_cache()
+            try:
+                return operation()
+            except (sqlite3.Error, Timeout) as retry_exc:
                 if fallback is not None:
-                    _notify_cache_event(
-                        self.cache_dir,
-                        f"Cache operation failed at {label}: {exc}",
+                    logging.warning(
+                        "Cache operation failed again at %s: %s",
+                        label,
+                        retry_exc,
                     )
                     return fallback
                 raise
-            _notify_cache_event(
-                self.cache_dir,
-                f"Cache failure at {label}: {exc}",
-            )
-            _notify_cache_event(
-                self.cache_dir,
-                f"Cache recovery at {label}: removing WAL/SHM and retrying",
-            )
-            try:
-                self._open_cache(sidecars_only=True)
-                result = operation()
-                _notify_cache_event(
-                    self.cache_dir,
-                    f"Cache recovered at {label} after removing WAL/SHM",
-                )
-                return result
-            except sqlite3.Error as retry_exc:
-                if not _is_corrupt_cache_error(retry_exc):
-                    if fallback is not None:
-                        _notify_cache_event(
-                            self.cache_dir,
-                            f"Cache operation failed at {label}: {retry_exc}",
-                        )
-                        return fallback
-                    raise
-                _notify_cache_event(
-                    self.cache_dir,
-                    f"Cache recovery at {label} failed after removing WAL/SHM: {retry_exc}",
-                )
-                _notify_cache_event(
-                    self.cache_dir,
-                    f"Cache reset at {label}; previous cached analysis will be regenerated",
-                    level=logging.ERROR,
-                )
-                self._open_cache(reset_files=True)
-                try:
-                    return operation()
-                except sqlite3.Error as final_exc:
-                    _notify_cache_event(
-                        self.cache_dir,
-                        f"Cache still unusable at {label}: {final_exc}",
-                        level=logging.ERROR,
-                    )
-                    if fallback is not None:
-                        return fallback
-                    raise
 
     # Function to cleanup the cache directory
     def cleanup_cache_dir(self):
